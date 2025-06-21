@@ -4,7 +4,7 @@
   <div class="px-4 py-6">
     <div class="flex justify-between items-center mb-4">
       <h1 class="font-semibold text-lg">Expenses</h1>        
-      <NuxtLink to="/upload-receipt" class="p-2">
+      <NuxtLink :to="paths.upload" class="p-2">
         <UIcon name="i-lucide-plus" :size="20" />
       </NuxtLink>
     </div>
@@ -51,9 +51,10 @@
 
 <script setup>
 const client = useSupabaseClient()
-
+import { paths } from '~~/utils/paths'
 const { data: receiptData, status: receiptsStatus } = useAsyncData('receipt_items', async () => {
   const { data, error } = await client.from('receipts').select('*')
   return data ?? []
 })
+
 </script> 

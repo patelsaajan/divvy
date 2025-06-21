@@ -28,13 +28,43 @@
         </div>
       </div>
       
-      <button class="w-full text-red-500 bg-gray-800 rounded-lg p-4 mt-6">
-        Sign Out
+      <button 
+        @click="handleSignOut" 
+        :disabled="isSigningOut"
+        class="w-full text-red-500 bg-gray-800 rounded-lg p-4 mt-6 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        {{ isSigningOut ? 'Signing out...' : 'Sign Out' }}
       </button>
     </div>
   </div>
 </template>
 
-<script setup>
-import { settingsGroups } from '../../dummyData/settings';
+<script setup lang="ts">
+import { paths } from "~~/utils/paths";
+import { settingsGroups } from '~~/dummyData/settings';
+
+const supabase = useSupabaseClient()
+const isSigningOut = ref(false)
+
+const handleSignOut = async () => {
+  isSigningOut.value = true
+  
+  try {
+    const { error } = await supabase.auth.signOut()
+    
+    if (error) {
+      console.error('Sign out error:', error)
+      // You could show an error toast here
+      return
+    }
+    
+    // Redirect to sign in page after successful sign out
+    await navigateTo(paths.auth.signin)
+  } catch (error) {
+    console.error('Sign out failed:', error)
+    // You could show an error toast here
+  } finally {
+    isSigningOut.value = false
+  }
+}
 </script> 
