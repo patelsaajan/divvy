@@ -32,8 +32,12 @@
             <span class="font-semibold mr-2">
               ${{ receipt.total_cost.toFixed(2) }}
             </span>
-            <NuxtLink :to="`/receipt/${receipt.id}/`" class="text-orange-500">
-              <UIcon name="i-lucide-external-link" :size="16" />
+            <NuxtLink :to="`/receipt/${receipt.id}/`" class="h-5">
+              <UIcon 
+                name="i-lucide-external-link"
+                size="20" 
+                class="text-white hover:text-orange-500 ml-4" 
+              />
             </NuxtLink>
           </div>
         </div>
