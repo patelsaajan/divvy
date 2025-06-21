@@ -12,25 +12,26 @@
     
     <div class="space-y-3">
       <div 
-        v-for="expense in expenses" 
-        :key="expense.id" 
+        v-if="receiptData.data.value"
+        v-for="receipt in receiptData.data.value" 
+        :key="receipt.id" 
         class="bg-gray-800 rounded-lg p-4"
       >
         <div class="flex justify-between items-center">
           <div class="flex items-center">
-            <div :class="[expense.color, 'p-2 rounded-md mr-3']">
-              <span class="text-white text-lg">{{ expense.emoji }}</span>
+            <div class="p-2 rounded-md mr-3 bg-violet-500">
+              <span class="text-white text-lg">🍑</span>
             </div>
             <div>
-              <h3 class="font-medium">{{ expense.name }}</h3>
-              <span class="text-xs text-gray-400">{{ expense.date }}</span>
+              <h3 class="font-medium">{{ receipt.vendor ?? 'Unknown' }}</h3>
+              <span class="text-xs text-gray-400">{{ receipt.uploaded_at }}</span>
             </div>
           </div>
           <div class="flex items-center">
             <span class="font-semibold mr-2">
-              ${{ expense.amount.toFixed(2) }}
+              ${{ receipt.total_cost.toFixed(2) }}
             </span>
-            <NuxtLink :to="`/receipt/${expense.id}`" class="text-orange-500">
+            <NuxtLink :to="`/receipt/${receipt.id}/`" class="text-orange-500">
               <UIcon name="i-lucide-external-link" :size="16" />
             </NuxtLink>
           </div>
@@ -41,7 +42,10 @@
 </template>
 
 <script setup>
-import { ExternalLinkIcon } from 'lucide-vue-next'
+const client = useSupabaseClient()
 
-import { expenses } from '../../dummyData/dashboard';
+const receiptData = useAsyncData('receipt_items', async () => {
+  const { data, error } = await client.from('receipts').select('*')
+  return data ?? []
+})
 </script> 
