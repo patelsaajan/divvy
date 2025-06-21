@@ -1,0 +1,889 @@
+{
+  "id": "16b87a80-561f-4693-a0d2-85a3db6bcfc6",
+  "filename": "receipt1.jpeg",
+  "inference": {
+    "pages": [
+      {
+        "orientation": {
+          "value": 0,
+          "reconstructed": false,
+          "pageId": 0
+        },
+        "id": 0,
+        "prediction": {
+          "lineItems": [
+            {
+              "confidence": 0.99,
+              "polygon": [
+                [0.008, 0.213],
+                [0.939, 0.213],
+                [0.939, 0.249],
+                [0.008, 0.249]
+              ],
+              "description": "COPERTO",
+              "quantity": null,
+              "totalAmount": 10.5,
+              "unitPrice": null
+            },
+            {
+              "confidence": 0.99,
+              "polygon": [
+                [0.028, 0.247],
+                [0.94, 0.247],
+                [0.94, 0.301],
+                [0.028, 0.301]
+              ],
+              "description": "GRANDE",
+              "quantity": 0.7,
+              "totalAmount": 5,
+              "unitPrice": 1.5
+            },
+            {
+              "confidence": 0.91,
+              "polygon": [
+                [0.026, 0.296],
+                [0.942, 0.296],
+                [0.942, 0.351],
+                [0.026, 0.351]
+              ],
+              "description": "' CREMINO -",
+              "quantity": 0.2,
+              "totalAmount": 4,
+              "unitPrice": 25
+            },
+            {
+              "confidence": 0.97,
+              "polygon": [
+                [0.003, 0.342],
+                [0.942, 0.342],
+                [0.942, 0.375],
+                [0.003, 0.375]
+              ],
+              "description": "CAPPUCCINO * T",
+              "quantity": null,
+              "totalAmount": 5,
+              "unitPrice": null
+            },
+            {
+              "confidence": 0.99,
+              "polygon": [
+                [0.023, 0.374],
+                [0.944, 0.374],
+                [0.944, 0.43],
+                [0.023, 0.43]
+              ],
+              "description": "DEL GIORNO",
+              "quantity": 0.2,
+              "totalAmount": 10,
+              "unitPrice": 2.5
+            },
+            {
+              "confidence": 0.99,
+              "polygon": [
+                [0.001, 0.422],
+                [0.944, 0.422],
+                [0.944, 0.455],
+                [0.001, 0.455]
+              ],
+              "description": "AVOCADO AGROPIC",
+              "quantity": null,
+              "totalAmount": 12,
+              "unitPrice": null
+            },
+            {
+              "confidence": 0.99,
+              "polygon": [
+                [0.001, 0.449],
+                [0.945, 0.449],
+                [0.945, 0.479],
+                [0.001, 0.479]
+              ],
+              "description": "CAPRESE",
+              "quantity": null,
+              "totalAmount": 12,
+              "unitPrice": null
+            },
+            {
+              "confidence": 0.99,
+              "polygon": [
+                [0, 0.476],
+                [0.945, 0.476],
+                [0.945, 0.504],
+                [0, 0.504]
+              ],
+              "description": "POLENTA GRILL",
+              "quantity": null,
+              "totalAmount": 5,
+              "unitPrice": null
+            },
+            {
+              "confidence": 0.86,
+              "polygon": [
+                [-0.003, 0.501],
+                [0.945, 0.501],
+                [0.945, 0.557],
+                [-0.003, 0.557]
+              ],
+              "description": "LASAGNE - ECOLOGICA EROR",
+              "quantity": null,
+              "totalAmount": 36,
+              "unitPrice": null
+            },
+            {
+              "confidence": 0.99,
+              "polygon": [
+                [0.165, 0.55],
+                [0.95, 0.55],
+                [0.95, 0.583],
+                [0.165, 0.583]
+              ],
+              "description": "INSALATA",
+              "quantity": null,
+              "totalAmount": 15,
+              "unitPrice": null
+            },
+            {
+              "confidence": 0.99,
+              "polygon": [
+                [0, 0.579],
+                [0.95, 0.579],
+                [0.95, 0.608],
+                [0, 0.608]
+              ],
+              "description": "TAMAGOYAKI",
+              "quantity": null,
+              "totalAmount": 10,
+              "unitPrice": null
+            },
+            {
+              "confidence": 0.89,
+              "polygon": [
+                [0.017, 0.606],
+                [0.7, 0.606],
+                [0.7, 0.646],
+                [0.017, 0.646]
+              ],
+              "description": "* 5,00",
+              "quantity": 0.2,
+              "totalAmount": 0.8119,
+              "unitPrice": null
+            },
+            {
+              "confidence": 0.99,
+              "polygon": [
+                [-0.003, 0.634],
+                [0.953, 0.634],
+                [0.953, 0.663],
+                [-0.003, 0.663]
+              ],
+              "description": "ONIGIRI",
+              "quantity": null,
+              "totalAmount": 3.5,
+              "unitPrice": null
+            },
+            {
+              "confidence": 0.99,
+              "polygon": [
+                [0.019, 0.657],
+                [0.954, 0.657],
+                [0.954, 0.717],
+                [0.019, 0.717]
+              ],
+              "description": "DEL GIORNO",
+              "quantity": 0.2,
+              "totalAmount": 20,
+              "unitPrice": 100
+            }
+          ],
+          "supplierCompanyRegistrations": [
+            {
+              "value": "07114700821",
+              "reconstructed": false,
+              "pageId": 0,
+              "polygon": [
+                [0.413, 0.053],
+                [0.662, 0.053],
+                [0.662, 0.106],
+                [0.413, 0.106]
+              ],
+              "confidence": 0.98,
+              "boundingBox": [
+                [0.413, 0.053],
+                [0.662, 0.053],
+                [0.662, 0.106],
+                [0.413, 0.106]
+              ],
+              "type": "IVA"
+            }
+          ],
+          "category": {
+            "value": "shopping",
+            "reconstructed": false,
+            "confidence": 0.97
+          },
+          "date": {
+            "value": "2025-05-06",
+            "reconstructed": false,
+            "pageId": 0,
+            "polygon": [
+              [0.289, 0.851],
+              [0.527, 0.851],
+              [0.527, 0.885],
+              [0.289, 0.885]
+            ],
+            "confidence": 0.99,
+            "boundingBox": [
+              [0.289, 0.851],
+              [0.527, 0.851],
+              [0.527, 0.885],
+              [0.289, 0.885]
+            ],
+            "dateObject": "2025-05-06T00:00:00.000Z"
+          },
+          "documentType": {
+            "value": "EXPENSE RECEIPT",
+            "reconstructed": false,
+            "confidence": 1
+          },
+          "locale": {
+            "value": "it-IT",
+            "reconstructed": false,
+            "confidence": 0.89,
+            "language": "it",
+            "country": "IT",
+            "currency": "EUR"
+          },
+          "receiptNumber": {
+            "value": "1642-0018",
+            "reconstructed": false,
+            "pageId": 0,
+            "polygon": [
+              [0.526, 0.88],
+              [0.728, 0.88],
+              [0.728, 0.908],
+              [0.526, 0.908]
+            ],
+            "confidence": 0.99,
+            "boundingBox": [
+              [0.526, 0.88],
+              [0.728, 0.88],
+              [0.728, 0.908],
+              [0.526, 0.908]
+            ]
+          },
+          "subcategory": {
+            "value": "groceries",
+            "reconstructed": false,
+            "confidence": 0.97
+          },
+          "supplierAddress": {
+            "value": "90133 PALERMO",
+            "reconstructed": false,
+            "pageId": 0,
+            "polygon": [
+              [0.326, 0.003],
+              [0.622, 0.003],
+              [0.622, 0.054],
+              [0.326, 0.054]
+            ],
+            "confidence": 0.99,
+            "boundingBox": [
+              [0.326, 0.003],
+              [0.622, 0.003],
+              [0.622, 0.054],
+              [0.326, 0.054]
+            ]
+          },
+          "supplierName": {
+            "value": "VIA DEI chiavenann /",
+            "reconstructed": false,
+            "pageId": 0,
+            "polygon": [
+              [0.219, -0.007],
+              [0.675, -0.007],
+              [0.675, 0.026],
+              [0.219, 0.026]
+            ],
+            "confidence": 0.96,
+            "boundingBox": [
+              [0.219, -0.007],
+              [0.675, -0.007],
+              [0.675, 0.026],
+              [0.219, 0.026]
+            ],
+            "rawValue": "VIA DEI chiavenann /"
+          },
+          "supplierPhoneNumber": {
+            "value": "0915558312",
+            "reconstructed": false,
+            "pageId": 0,
+            "polygon": [
+              [0.488, 0.033],
+              [0.743, 0.033],
+              [0.743, 0.066],
+              [0.488, 0.066]
+            ],
+            "confidence": 0.99,
+            "boundingBox": [
+              [0.488, 0.033],
+              [0.743, 0.033],
+              [0.743, 0.066],
+              [0.488, 0.066]
+            ]
+          },
+          "taxes": [
+            {
+              "value": 12.65,
+              "reconstructed": false,
+              "pageId": 0,
+              "polygon": [
+                [0.163, 0.751],
+                [0.957, 0.751],
+                [0.957, 0.785],
+                [0.163, 0.785]
+              ],
+              "confidence": 0.99,
+              "boundingBox": [
+                [0.163, 0.751],
+                [0.957, 0.751],
+                [0.957, 0.785],
+                [0.163, 0.785]
+              ],
+              "code": "IVA"
+            }
+          ],
+          "time": {
+            "value": "17:02",
+            "reconstructed": false,
+            "pageId": 0,
+            "polygon": [
+              [0.547, 0.852],
+              [0.664, 0.852],
+              [0.664, 0.882],
+              [0.547, 0.882]
+            ],
+            "confidence": 0.99,
+            "boundingBox": [
+              [0.547, 0.852],
+              [0.664, 0.852],
+              [0.664, 0.882],
+              [0.547, 0.882]
+            ]
+          },
+          "tip": {
+            "reconstructed": false,
+            "polygon": [],
+            "confidence": 0,
+            "boundingBox": [
+              [null, null],
+              [null, null],
+              [null, null],
+              [null, null]
+            ]
+          },
+          "totalAmount": {
+            "value": 148,
+            "reconstructed": false,
+            "pageId": 0,
+            "polygon": [
+              [0.808, 0.81],
+              [0.957, 0.81],
+              [0.957, 0.836],
+              [0.808, 0.836]
+            ],
+            "confidence": 0.99,
+            "boundingBox": [
+              [0.808, 0.81],
+              [0.957, 0.81],
+              [0.957, 0.836],
+              [0.808, 0.836]
+            ]
+          },
+          "totalNet": {
+            "reconstructed": false,
+            "polygon": [],
+            "confidence": 0,
+            "boundingBox": [
+              [null, null],
+              [null, null],
+              [null, null],
+              [null, null]
+            ]
+          },
+          "totalTax": {
+            "value": 12.65,
+            "reconstructed": false,
+            "pageId": 0,
+            "polygon": [],
+            "confidence": 0.99,
+            "boundingBox": [
+              [null, null],
+              [null, null],
+              [null, null],
+              [null, null]
+            ]
+          }
+        },
+        "extras": {}
+      }
+    ],
+    "isRotationApplied": true,
+    "product": {
+      "features": [
+        "locale",
+        "category",
+        "subcategory",
+        "document_type",
+        "date",
+        "time",
+        "total_amount",
+        "total_net",
+        "total_tax",
+        "tip",
+        "taxes",
+        "supplier_name",
+        "supplier_company_registrations",
+        "supplier_address",
+        "supplier_phone_number",
+        "orientation",
+        "receipt_number",
+        "line_items"
+      ],
+      "name": "mindee/expense_receipts",
+      "type": "standard",
+      "version": "5.4"
+    },
+    "extras": {},
+    "endpointName": "expense_receipts",
+    "endpointVersion": "5",
+    "prediction": {
+      "lineItems": [
+        {
+          "confidence": 0.99,
+          "polygon": [
+            [0.008, 0.213],
+            [0.939, 0.213],
+            [0.939, 0.249],
+            [0.008, 0.249]
+          ],
+          "description": "COPERTO",
+          "quantity": null,
+          "totalAmount": 10.5,
+          "unitPrice": null,
+          "pageId": 0
+        },
+        {
+          "confidence": 0.99,
+          "polygon": [
+            [0.028, 0.247],
+            [0.94, 0.247],
+            [0.94, 0.301],
+            [0.028, 0.301]
+          ],
+          "description": "GRANDE",
+          "quantity": 0.7,
+          "totalAmount": 5,
+          "unitPrice": 1.5,
+          "pageId": 0
+        },
+        {
+          "confidence": 0.91,
+          "polygon": [
+            [0.026, 0.296],
+            [0.942, 0.296],
+            [0.942, 0.351],
+            [0.026, 0.351]
+          ],
+          "description": "' CREMINO -",
+          "quantity": 0.2,
+          "totalAmount": 4,
+          "unitPrice": 25,
+          "pageId": 0
+        },
+        {
+          "confidence": 0.97,
+          "polygon": [
+            [0.003, 0.342],
+            [0.942, 0.342],
+            [0.942, 0.375],
+            [0.003, 0.375]
+          ],
+          "description": "CAPPUCCINO * T",
+          "quantity": null,
+          "totalAmount": 5,
+          "unitPrice": null,
+          "pageId": 0
+        },
+        {
+          "confidence": 0.99,
+          "polygon": [
+            [0.023, 0.374],
+            [0.944, 0.374],
+            [0.944, 0.43],
+            [0.023, 0.43]
+          ],
+          "description": "DEL GIORNO",
+          "quantity": 0.2,
+          "totalAmount": 10,
+          "unitPrice": 2.5,
+          "pageId": 0
+        },
+        {
+          "confidence": 0.99,
+          "polygon": [
+            [0.001, 0.422],
+            [0.944, 0.422],
+            [0.944, 0.455],
+            [0.001, 0.455]
+          ],
+          "description": "AVOCADO AGROPIC",
+          "quantity": null,
+          "totalAmount": 12,
+          "unitPrice": null,
+          "pageId": 0
+        },
+        {
+          "confidence": 0.99,
+          "polygon": [
+            [0.001, 0.449],
+            [0.945, 0.449],
+            [0.945, 0.479],
+            [0.001, 0.479]
+          ],
+          "description": "CAPRESE",
+          "quantity": null,
+          "totalAmount": 12,
+          "unitPrice": null,
+          "pageId": 0
+        },
+        {
+          "confidence": 0.99,
+          "polygon": [
+            [0, 0.476],
+            [0.945, 0.476],
+            [0.945, 0.504],
+            [0, 0.504]
+          ],
+          "description": "POLENTA GRILL",
+          "quantity": null,
+          "totalAmount": 5,
+          "unitPrice": null,
+          "pageId": 0
+        },
+        {
+          "confidence": 0.86,
+          "polygon": [
+            [-0.003, 0.501],
+            [0.945, 0.501],
+            [0.945, 0.557],
+            [-0.003, 0.557]
+          ],
+          "description": "LASAGNE - ECOLOGICA EROR",
+          "quantity": null,
+          "totalAmount": 36,
+          "unitPrice": null,
+          "pageId": 0
+        },
+        {
+          "confidence": 0.99,
+          "polygon": [
+            [0.165, 0.55],
+            [0.95, 0.55],
+            [0.95, 0.583],
+            [0.165, 0.583]
+          ],
+          "description": "INSALATA",
+          "quantity": null,
+          "totalAmount": 15,
+          "unitPrice": null,
+          "pageId": 0
+        },
+        {
+          "confidence": 0.99,
+          "polygon": [
+            [0, 0.579],
+            [0.95, 0.579],
+            [0.95, 0.608],
+            [0, 0.608]
+          ],
+          "description": "TAMAGOYAKI",
+          "quantity": null,
+          "totalAmount": 10,
+          "unitPrice": null,
+          "pageId": 0
+        },
+        {
+          "confidence": 0.89,
+          "polygon": [
+            [0.017, 0.606],
+            [0.7, 0.606],
+            [0.7, 0.646],
+            [0.017, 0.646]
+          ],
+          "description": "* 5,00",
+          "quantity": 0.2,
+          "totalAmount": 0.8119,
+          "unitPrice": null,
+          "pageId": 0
+        },
+        {
+          "confidence": 0.99,
+          "polygon": [
+            [-0.003, 0.634],
+            [0.953, 0.634],
+            [0.953, 0.663],
+            [-0.003, 0.663]
+          ],
+          "description": "ONIGIRI",
+          "quantity": null,
+          "totalAmount": 3.5,
+          "unitPrice": null,
+          "pageId": 0
+        },
+        {
+          "confidence": 0.99,
+          "polygon": [
+            [0.019, 0.657],
+            [0.954, 0.657],
+            [0.954, 0.717],
+            [0.019, 0.717]
+          ],
+          "description": "DEL GIORNO",
+          "quantity": 0.2,
+          "totalAmount": 20,
+          "unitPrice": 100,
+          "pageId": 0
+        }
+      ],
+      "supplierCompanyRegistrations": [
+        {
+          "value": "07114700821",
+          "reconstructed": false,
+          "pageId": 0,
+          "polygon": [
+            [0.413, 0.053],
+            [0.662, 0.053],
+            [0.662, 0.106],
+            [0.413, 0.106]
+          ],
+          "confidence": 0.98,
+          "boundingBox": [
+            [0.413, 0.053],
+            [0.662, 0.053],
+            [0.662, 0.106],
+            [0.413, 0.106]
+          ],
+          "type": "IVA"
+        }
+      ],
+      "category": {
+        "value": "shopping",
+        "reconstructed": false,
+        "confidence": 0.97
+      },
+      "date": {
+        "value": "2025-05-06",
+        "reconstructed": false,
+        "pageId": 0,
+        "polygon": [
+          [0.289, 0.851],
+          [0.527, 0.851],
+          [0.527, 0.885],
+          [0.289, 0.885]
+        ],
+        "confidence": 0.99,
+        "boundingBox": [
+          [0.289, 0.851],
+          [0.527, 0.851],
+          [0.527, 0.885],
+          [0.289, 0.885]
+        ],
+        "dateObject": "2025-05-06T00:00:00.000Z"
+      },
+      "documentType": {
+        "value": "EXPENSE RECEIPT",
+        "reconstructed": false,
+        "confidence": 1
+      },
+      "locale": {
+        "value": "it-IT",
+        "reconstructed": false,
+        "confidence": 0.89,
+        "language": "it",
+        "country": "IT",
+        "currency": "EUR"
+      },
+      "receiptNumber": {
+        "value": "1642-0018",
+        "reconstructed": false,
+        "pageId": 0,
+        "polygon": [
+          [0.526, 0.88],
+          [0.728, 0.88],
+          [0.728, 0.908],
+          [0.526, 0.908]
+        ],
+        "confidence": 0.99,
+        "boundingBox": [
+          [0.526, 0.88],
+          [0.728, 0.88],
+          [0.728, 0.908],
+          [0.526, 0.908]
+        ]
+      },
+      "subcategory": {
+        "value": "groceries",
+        "reconstructed": false,
+        "confidence": 0.97
+      },
+      "supplierAddress": {
+        "value": "90133 PALERMO",
+        "reconstructed": false,
+        "pageId": 0,
+        "polygon": [
+          [0.326, 0.003],
+          [0.622, 0.003],
+          [0.622, 0.054],
+          [0.326, 0.054]
+        ],
+        "confidence": 0.99,
+        "boundingBox": [
+          [0.326, 0.003],
+          [0.622, 0.003],
+          [0.622, 0.054],
+          [0.326, 0.054]
+        ]
+      },
+      "supplierName": {
+        "value": "VIA DEI chiavenann /",
+        "reconstructed": false,
+        "pageId": 0,
+        "polygon": [
+          [0.219, -0.007],
+          [0.675, -0.007],
+          [0.675, 0.026],
+          [0.219, 0.026]
+        ],
+        "confidence": 0.96,
+        "boundingBox": [
+          [0.219, -0.007],
+          [0.675, -0.007],
+          [0.675, 0.026],
+          [0.219, 0.026]
+        ],
+        "rawValue": "VIA DEI chiavenann /"
+      },
+      "supplierPhoneNumber": {
+        "value": "0915558312",
+        "reconstructed": false,
+        "pageId": 0,
+        "polygon": [
+          [0.488, 0.033],
+          [0.743, 0.033],
+          [0.743, 0.066],
+          [0.488, 0.066]
+        ],
+        "confidence": 0.99,
+        "boundingBox": [
+          [0.488, 0.033],
+          [0.743, 0.033],
+          [0.743, 0.066],
+          [0.488, 0.066]
+        ]
+      },
+      "taxes": [
+        {
+          "value": 12.65,
+          "reconstructed": false,
+          "pageId": 0,
+          "polygon": [
+            [0.163, 0.751],
+            [0.957, 0.751],
+            [0.957, 0.785],
+            [0.163, 0.785]
+          ],
+          "confidence": 0.99,
+          "boundingBox": [
+            [0.163, 0.751],
+            [0.957, 0.751],
+            [0.957, 0.785],
+            [0.163, 0.785]
+          ],
+          "code": "IVA"
+        }
+      ],
+      "time": {
+        "value": "17:02",
+        "reconstructed": false,
+        "pageId": 0,
+        "polygon": [
+          [0.547, 0.852],
+          [0.664, 0.852],
+          [0.664, 0.882],
+          [0.547, 0.882]
+        ],
+        "confidence": 0.99,
+        "boundingBox": [
+          [0.547, 0.852],
+          [0.664, 0.852],
+          [0.664, 0.882],
+          [0.547, 0.882]
+        ]
+      },
+      "tip": {
+        "reconstructed": false,
+        "polygon": [],
+        "confidence": 0,
+        "boundingBox": [
+          [null, null],
+          [null, null],
+          [null, null],
+          [null, null]
+        ]
+      },
+      "totalAmount": {
+        "value": 148,
+        "reconstructed": false,
+        "pageId": 0,
+        "polygon": [
+          [0.808, 0.81],
+          [0.957, 0.81],
+          [0.957, 0.836],
+          [0.808, 0.836]
+        ],
+        "confidence": 0.99,
+        "boundingBox": [
+          [0.808, 0.81],
+          [0.957, 0.81],
+          [0.957, 0.836],
+          [0.808, 0.836]
+        ]
+      },
+      "totalNet": {
+        "reconstructed": false,
+        "polygon": [],
+        "confidence": 0,
+        "boundingBox": [
+          [null, null],
+          [null, null],
+          [null, null],
+          [null, null]
+        ]
+      },
+      "totalTax": {
+        "value": 12.65,
+        "reconstructed": false,
+        "pageId": null,
+        "polygon": [],
+        "confidence": 0.99,
+        "boundingBox": [
+          [null, null],
+          [null, null],
+          [null, null],
+          [null, null]
+        ]
+      }
+    }
+  },
+  "nPages": 1
+}
