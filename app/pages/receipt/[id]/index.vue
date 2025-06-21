@@ -1,6 +1,6 @@
 <template>
 
-  <template v-if="receiptStatus && itemsStatus === 'success'">
+  <template v-if="receiptStatus === 'success' && itemsStatus === 'success'">
   <div class="container mx-auto mt-6">
     <div class="flex items-center mb-6">
       <UButton variant="ghost" class="p-2 mr-2" @click="navigateTo('/')">
