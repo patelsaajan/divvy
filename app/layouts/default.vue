@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="relative h-screen">
     <slot />
     <LayoutNavigation />
   </div>
