@@ -1,4 +1,6 @@
 <template>
+
+<template v-if="receiptsStatus === 'success'">
   <div class="px-4 py-6">
     <div class="flex justify-between items-center mb-4">
       <h1 class="font-semibold text-lg">Expenses</h1>        
@@ -12,8 +14,7 @@
     
     <div class="space-y-3">
       <div 
-        v-if="receiptData.data.value"
-        v-for="receipt in receiptData.data.value" 
+        v-for="receipt in receiptData" 
         :key="receipt.id" 
         class="bg-gray-800 rounded-lg p-4"
       >
@@ -41,10 +42,17 @@
   </div>
 </template>
 
+<template v-else>
+  Loading...
+</template>
+
+</template>
+
+
 <script setup>
 const client = useSupabaseClient()
 
-const receiptData = useAsyncData('receipt_items', async () => {
+const { data: receiptData, status: receiptsStatus } = useAsyncData('receipt_items', async () => {
   const { data, error } = await client.from('receipts').select('*')
   return data ?? []
 })
