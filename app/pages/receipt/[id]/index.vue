@@ -19,7 +19,12 @@
     
     <!-- Receipt Items -->
     <div class="mb-6">
-      <h3 class="font-medium mb-3">Receipt</h3>
+      <div class="flex justify-between items-center mb-3 pb-3 border-b border-gray-700">
+        <h3 class="font-medium mb-3">Receipt</h3>
+        <UDropdownMenu :items="items" :content="{ align: 'start' }" :ui="{ content: 'w-48' }">
+          <UButton label="Open" color="neutral" variant="outline" icon="i-lucide-menu" />
+        </UDropdownMenu>
+      </div>
       <div class="bg-gray-800 rounded-lg p-4 mb-4">
         <!-- Receipt Header -->
         <div class="flex justify-between items-center mb-3 pb-3 border-b border-gray-700">
@@ -93,4 +98,43 @@ function formatDate(date) {
     year: 'numeric',
   })
 }
+
+const showBookmarks = ref(true)
+const showHistory = ref(false)
+const showDownloads = ref(false)
+
+const items = computed(() => [{
+  label: 'People',
+  icon: 'i-lucide-app-window',
+  type: 'label'
+}, {
+  type: 'separator'
+}, {
+  label: 'Show Bookmarks',
+  icon: 'i-lucide-bookmark',
+  type: 'checkbox',
+  checked: showBookmarks.value,
+  onUpdateChecked(checked) {
+    showBookmarks.value = checked
+  },
+  onSelect(e) {
+    e.preventDefault()
+  }
+}, {
+  label: 'Show History',
+  icon: 'i-lucide-clock',
+  type: 'checkbox',
+  checked: showHistory.value,
+  onUpdateChecked(checked) {
+    showHistory.value = checked
+  }
+}, {
+  label: 'Show Downloads',
+  icon: 'i-lucide-download',
+  type: 'checkbox',
+  checked: showDownloads.value,
+  onUpdateChecked(checked) {
+    showDownloads.value = checked
+  }
+}])
 </script> 
