@@ -71,7 +71,7 @@
 </template>
 
 <script setup>
-import { endpoints } from '~~/endpoints'
+import { endpoints } from '~~/utils/endpoints'
 
 const isUploading = ref(false)
 const file        = ref(null)
@@ -94,7 +94,6 @@ const handleUpload = async (e) => {
 
   if (response.ok) {
     const data = await response.json()
-    console.log(data)
     isUploading.value = false
     navigateTo('/receipt/new')
   } else {
