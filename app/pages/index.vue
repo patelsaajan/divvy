@@ -1,6 +1,6 @@
 <template>
 
-<template v-if="receiptsStatus === 'success'">
+<template v-if="receiptsStatus === 'dsada'">
   <div class="px-4 py-6">
     <div class="flex justify-between items-center mb-4">
       <h1 class="font-semibold text-lg">Expenses</h1>        
@@ -36,7 +36,7 @@
               <UIcon 
                 name="i-lucide-external-link"
                 size="20" 
-                class="text-white hover:text-orange-500 ml-4" 
+                class="text-white hover:text-secondary ml-4" 
               />
             </NuxtLink>
           </div>
@@ -47,7 +47,7 @@
 </template>
 
 <template v-else>
-  Loading...
+  <Loading />
 </template>
 
 </template>

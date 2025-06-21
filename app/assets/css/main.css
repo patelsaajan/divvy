@@ -6,7 +6,8 @@ body {
 }
 
 @theme {
-  --ui-primary: #fff;
+  --ui-primary  : #fff;
+  --ui-secondary: #ff7f00;
 }
 
 @utility container {

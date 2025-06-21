@@ -93,8 +93,8 @@
 </template>
 
   <template v-else>
-    Loading...
-  </template>
+    <Loading />
+  </template> 
 </template>
 
 <script setup lang="ts">
