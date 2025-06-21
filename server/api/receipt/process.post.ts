@@ -48,10 +48,7 @@ function parseMindeeResponse(
 export default defineEventHandler(async (event) => {
   const formData = await readMultipartFormData(event);
 
-  const file = formData?.find((item) => item.name === "image") as
-    | File
-    | undefined;
-
+  const file = formData?.find((item) => item.type === "image/jpeg") 
   if (!file) {
     return createError({
       statusCode: 400,
@@ -61,12 +58,12 @@ export default defineEventHandler(async (event) => {
 
   // Upload the file to supabase storage
   const receiptId = uuid();
-  const fileName = `${receiptId}.${getFileExtension(file.name)}`;
+  const fileName = `${receiptId}.${getFileExtension(file.filename ?? 'jpg')}`;
   const filePath = `${fileName}`; // Change this to `${userId}/${receiptId}` when auth is setup and update bucket policy
 
   const { error: uploadError } = await supabase.storage
     .from("receipts")
-    .upload(filePath, file, {
+    .upload(filePath, file.data, {
       contentType: file.type,
       cacheControl: "3600",
     });
