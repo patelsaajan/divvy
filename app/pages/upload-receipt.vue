@@ -71,6 +71,7 @@
 </template>
 
 <script setup>
+import { endpoints } from '~~/endpoints'
 
 const isUploading = ref(false)
 const file        = ref(null)
@@ -86,8 +87,7 @@ const handleUpload = async (e) => {
   isUploading.value = true 
   const formData = new FormData()
   formData.append('file', file.value)
-  console.log('formData::', formData)
-  const response = await fetch('/api/process-receipt', {
+  const response = await fetch(endpoints.receipt.process, {
     method: 'POST',
     body: formData
   })
