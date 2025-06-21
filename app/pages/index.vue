@@ -1,6 +1,6 @@
 <template>
 
-<template v-if="receiptsStatus === 'dsada'">
+<template v-if="receiptsStatus === 'success'">
   <div class="px-4 py-6">
     <div class="flex justify-between items-center mb-4">
       <h1 class="font-semibold text-lg">Expenses</h1>        
