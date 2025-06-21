@@ -3,9 +3,9 @@
   <template v-if="receiptStatus === 'success' && itemsStatus === 'success'">
   <div class="container mx-auto mt-6">
     <div class="flex items-center mb-6">
-      <UButton variant="ghost" class="p-2 mr-2" @click="navigateTo('/')">
+      <UButton variant="link" color="secondary" class="p-2 mr-2 cursor-pointer" @click="navigateTo('/')">
         <UIcon name="i-heroicons-chevron-left" :size="24" />
-        <span class="ml-2">Expense Report</span>
+        <span class="ml-2">Receipts</span>
       </UButton>
     </div>
     
@@ -27,7 +27,7 @@
             <UAvatar v-for="member in members" v-show="member.checked" :key="member.name" :alt="member.name" />
           </UAvatarGroup>
           <UDropdownMenu :items="memberItems" :content="{ align: 'start' }" :ui="{ content: 'w-48' }">
-            <UButton label="Members" color="neutral" variant="outline" icon="i-lucide-users" />
+            <UButton label="Members" color="primary" variant="outline" icon="i-lucide-users" />
           </UDropdownMenu>
       </div>
       </div>

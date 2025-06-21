@@ -3,7 +3,7 @@
 <template v-if="receiptsStatus === 'success'">
   <div class="px-4 py-6">
     <div class="flex justify-between items-center mb-4">
-      <h1 class="font-semibold text-lg">Expenses</h1>        
+      <h1 class="font-semibold text-lg">Receipts</h1>        
       <NuxtLink :to="paths.upload" class="p-2">
         <UIcon name="i-lucide-plus" :size="20" />
       </NuxtLink>
