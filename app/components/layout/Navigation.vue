@@ -1,5 +1,5 @@
 <template>
-  <nav class="absolute mt-6 bottom-0 left-0 right-0 bg-gray-800 py-2 px-4">
+  <nav class="sticky mt-6 bottom-0 left-0 right-0 bg-gray-800 py-2 px-4">
     <div class="flex justify-around items-center">
       <NuxtLink 
         :to="paths.home"
