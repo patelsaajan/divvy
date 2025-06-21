@@ -30,7 +30,7 @@
             <span class="font-semibold mr-2">
               ${{ expense.amount.toFixed(2) }}
             </span>
-            <NuxtLink :to="`/expense/${expense.id}`" class="text-orange-500">
+            <NuxtLink :to="`/receipt/${expense.id}`" class="text-orange-500">
               <UIcon name="i-lucide-external-link" :size="16" />
             </NuxtLink>
           </div>
