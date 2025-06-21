@@ -30,7 +30,7 @@
           </div>
           <div class="flex items-center">
             <span class="font-semibold mr-2">
-              ${{ receipt.total_cost.toFixed(2) }}
+              £{{ receipt.total_cost ? receipt.total_cost.toFixed(2) : '0.00' }}
             </span>
             <NuxtLink :to="`/receipt/${receipt.id}/`" class="h-5">
               <UIcon 

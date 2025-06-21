@@ -41,7 +41,7 @@
             </div>
           </div>
           <div class="text-right">
-            <span class="font-semibold text-lg">${{ receipt.total_cost ? receipt.total_cost.toFixed(2) : 0 }}</span>
+            <span class="font-semibold text-lg">£{{ receipt.total_cost ? receipt.total_cost.toFixed(2) : 0.00 }}</span>
             <div class="text-xs text-gray-400">{{ fields?.length ?? 0 }} items</div>
           </div>
         </div>
