@@ -1,7 +1,7 @@
 <template>
   <nav class="sticky mt-6 bottom-0 left-0 right-0 bg-gray-800 py-2 px-4">
     <div class="flex justify-around items-center">
-      <NuxtLink 
+      <NuxtLink
         :to="paths.home"
         class="flex flex-col items-center p-2 rounded-md text-gray-400 hover:text-white transition-colors"
         active-class="text-orange-500"
@@ -9,18 +9,18 @@
         <ReceiptIcon :size="24" />
         <span class="text-xs mt-1">Expenses</span>
       </NuxtLink>
-      
-      <NuxtLink 
-        :to="paths.upload" 
+
+      <NuxtLink
+        :to="paths.upload"
         class="flex flex-col items-center p-2 rounded-md text-gray-400 hover:text-white transition-colors"
         active-class="text-orange-500"
       >
         <UploadIcon :size="24" />
         <span class="text-xs mt-1">Upload</span>
       </NuxtLink>
-      
-      <NuxtLink 
-        :to="paths.settings" 
+
+      <NuxtLink
+        :to="paths.settings"
         class="flex flex-col items-center p-2 rounded-md text-gray-400 hover:text-white transition-colors"
         active-class="text-orange-500"
       >
@@ -32,6 +32,6 @@
 </template>
 
 <script setup>
-import { paths } from '~~/utils/paths'
-import { ReceiptIcon, UploadIcon, SettingsIcon } from 'lucide-vue-next'
-</script> 
+import { ReceiptIcon, SettingsIcon, UploadIcon } from "lucide-vue-next";
+import { paths } from "~~/utils/paths";
+</script>

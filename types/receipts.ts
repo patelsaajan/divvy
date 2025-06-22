@@ -10,7 +10,6 @@ export type ReceiptSchema = {
   emoji: string | null;
   vendor: string | null;
   country_code: string | null;
-  uploaded_at: string | null;
 };
 
 export type ReceiptItemSchema = {

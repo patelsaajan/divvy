@@ -1,6 +1,6 @@
 <template>
   <div class="relative h-screen">
-      <slot />
+    <slot />
     <LayoutNavigation />
   </div>
 </template>

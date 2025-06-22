@@ -15,14 +15,11 @@ function parseMindeeResponse(
   mindeeResponse: MindeeResponse,
   receiptId: string,
   storagePath: string
-): {
-  receipt: ReceiptSchema;
-  items: ReceiptItemSchema[];
-} {
+) {
   const { prediction } = mindeeResponse.document.inference;
 
   // Parse receipt data
-  const receipt: ReceiptSchema = {
+  const receipt: Omit<ReceiptSchema, "uploaded_at"> = {
     id: receiptId,
     storage_path: storagePath,
     total_cost: prediction.totalAmount.value || null,
@@ -48,7 +45,7 @@ function parseMindeeResponse(
 export default defineEventHandler(async (event) => {
   const formData = await readMultipartFormData(event);
 
-  const file = formData?.find((item) => item.type === "image/jpeg") 
+  const file = formData?.find((item) => item.type === "image/jpeg");
   if (!file) {
     return createError({
       statusCode: 400,
@@ -58,7 +55,7 @@ export default defineEventHandler(async (event) => {
 
   // Upload the file to supabase storage
   const receiptId = uuid();
-  const fileName = `${receiptId}.${getFileExtension(file.filename ?? 'jpg')}`;
+  const fileName = `${receiptId}.${getFileExtension(file.filename ?? "jpg")}`;
   const filePath = `${fileName}`; // Change this to `${userId}/${receiptId}` when auth is setup and update bucket policy
 
   const { error: uploadError } = await supabase.storage

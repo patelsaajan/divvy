@@ -7,8 +7,7 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare",
-    "lint": "eslint"
+    "postinstall": "nuxt prepare"
   },
   "dependencies": {
     "@nuxt/fonts": "0.11.4",
@@ -26,11 +25,5 @@
     "vee-validate": "^4.15.1",
     "vue": "^3.5.16",
     "vue-router": "^4.5.1"
-  },
-  "devDependencies": {
-    "eslint": "^9.29.0",
-    "eslint-config-prettier": "^10.1.5",
-    "eslint-plugin-vue": "^10.2.0",
-    "prettier": "3.5.3"
   }
 }
