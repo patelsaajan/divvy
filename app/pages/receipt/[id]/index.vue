@@ -92,8 +92,8 @@
                 :class="{ 'bg-blue-800': fieldItems[idx]?.left > 75 }"
                 class="absolute top-0 left-0 w-1/4 h-full bg-blue-500/30 flex items-center justify-center z-10 rounded gap-x-2"
               >
-                <span class="text-white font-medium">Edit</span>
                 <UIcon name="i-lucide-edit" :size="16" />
+                <span class="text-white font-medium">Edit</span>
               </div>
               <div
                 :ref="el => setTargetRef(idx, el as HTMLElement)"
