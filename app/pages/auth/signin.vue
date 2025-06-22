@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { supabase } from "~~/utils/supabase";
 import { paths } from "~~/utils/paths";
 
 definePageMeta({ layout: false });
 
+const supabase = useSupabaseClient();
 const email = ref("");
 const isLoading = ref(false);
 const isEmailSent = ref(false);

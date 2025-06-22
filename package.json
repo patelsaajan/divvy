@@ -8,8 +8,7 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare",
-    "update-types": "npx supabase gen types --lang=typescript --project-id \"pqqjfbxnzdklbgvfcksl\" > types/database.types.ts"
+    "postinstall": "nuxt prepare"
   },
   "dependencies": {
     "@nuxt/fonts": "0.11.4",

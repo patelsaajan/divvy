@@ -182,10 +182,11 @@
 </template>
 
 <script setup lang="ts">
-import { supabase } from "~~/utils/supabase";
 import { paths } from "~~/utils/paths";
 
 definePageMeta({ layout: false });
+
+const supabase = useSupabaseClient();
 
 const name = ref("");
 const email = ref("");

@@ -1,5 +1,5 @@
 import { v4 as uuid } from "uuid";
-import type { TablesInsert } from "~~/types/database.types";
+import { ReceiptItemSchema, ReceiptSchema } from "~~/types/receipts";
 import { supabase } from "~~/utils/supabase";
 
 import mockResponse from "~~/mock/receipt4-tesco.json";
@@ -14,28 +14,26 @@ const getFileExtension = (fileName: string) => {
 function parseMindeeResponse(
   mindeeResponse: MindeeResponse,
   receiptId: string,
-  storagePath: string,
-  userId: string
+  storagePath: string
 ) {
   const { prediction } = mindeeResponse.document.inference;
 
   // Parse receipt data
-  const receipt: TablesInsert<"receipts"> = {
+  const receipt: Omit<ReceiptSchema, "uploaded_at"> = {
     id: receiptId,
     storage_path: storagePath,
     total_cost: prediction.totalAmount.value || null,
     currency: prediction.locale.currency || null,
-    raw_json: mindeeResponse as { [key: string]: any },
+    raw_json: mindeeResponse,
     title: null,
     emoji: null,
     vendor: prediction.supplierName.value || null,
     country_code: prediction.locale.country || null,
     locale: prediction.locale.value || null,
-    user_id: userId,
   };
 
   // Parse line items
-  const items: TablesInsert<"receipt_items">[] =
+  const items: ReceiptItemSchema[] =
     prediction.lineItems?.map((item, index) => ({
       receipt_id: receiptId,
       title: item.description || `Item ${index + 1}`,
@@ -48,17 +46,6 @@ function parseMindeeResponse(
 export default defineEventHandler(async (event) => {
   const formData = await readMultipartFormData(event);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized",
-    });
-  }
-
   const file = formData?.find((item) => item.type === "image/jpeg");
   if (!file) {
     return createError({
@@ -70,7 +57,7 @@ export default defineEventHandler(async (event) => {
   // Upload the file to supabase storage
   const receiptId = uuid();
   const fileName = `${receiptId}.${getFileExtension(file.filename ?? "jpg")}`;
-  const filePath = `${user.id}/${fileName}`;
+  const filePath = `${fileName}`; // Change this to `${userId}/${receiptId}` when auth is setup and update bucket policy
 
   const { error: uploadError } = await supabase.storage
     .from("receipts")
@@ -107,12 +94,13 @@ export default defineEventHandler(async (event) => {
   //   inputSource
   // );
 
+  // return {id: receiptId, data: apiResponse.document}
+
   // Parse the response from mindee
   const { receipt, items } = parseMindeeResponse(
     { document: mockResponse } as unknown as MindeeResponse,
     receiptId,
-    filePath,
-    user.id
+    filePath
   );
 
   // Upload the parsed response to Supabase

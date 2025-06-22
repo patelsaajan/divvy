@@ -37,10 +37,10 @@
 </template>
 
 <script setup lang="ts">
-import { supabase } from "~~/utils/supabase";
 import { settingsGroups } from "~~/dummyData/settings";
 import { paths } from "~~/utils/paths";
 
+const supabase = useSupabaseClient();
 const isSigningOut = ref(false);
 
 const handleSignOut = async () => {
