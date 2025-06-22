@@ -51,10 +51,10 @@
             </UDropdownMenu>
           </div>
         </div>
-        <div class="bg-gray-800 rounded-lg p-4 mb-4">
+        <div class="bg-gray-800 rounded-lg py-4 px-2 mb-4">
           <!-- Receipt Header -->
           <div
-            class="flex justify-between items-center mb-3 pb-3 border-b border-gray-700"
+            class="flex justify-between items-center mb-3 px-4 pb-3 border-b border-gray-700"
           >
             <div class="flex items-center">
               <div>
@@ -139,13 +139,13 @@
                 </div>
                 <UIcon
                   :name="
-                    totalCost === receipt?.total_cost?.toString()
+                    totalCost === receipt?.total_cost?.toFixed(2).toString()
                       ? 'i-lucide-check-circle'
                       : 'i-lucide-x-circle'
                   "
                   class="ml-2"
                   :class="
-                    totalCost === receipt?.total_cost?.toString()
+                    totalCost === receipt?.total_cost?.toFixed(2).toString()
                       ? 'text-green-500'
                       : 'text-red-500'
                   "
@@ -160,11 +160,7 @@
               class="flex-1 bg-gray-700 text-white py-2 rounded text-sm flex items-center justify-center"
               @click="drawerOpen = true"
             >
-              <UIcon
-                name="i-heroicons-user-group"
-                :size="16"
-                class="inline mr-1"
-              />
+              <UIcon name="i-lucide-users" :size="16" class="inline mr-1" />
               <span class="ml-2">Members</span>
             </UButton>
             <UButton
