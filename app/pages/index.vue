@@ -8,8 +8,6 @@
         </NuxtLink>
       </div>
 
-      <div class="text-xs text-gray-400 mb-4">FRIDAY 15 SEP</div>
-
       <div class="space-y-3">
         <div
           v-for="receipt in receipts"
@@ -30,8 +28,12 @@
             </div>
             <div class="flex items-center">
               <span class="font-semibold mr-2">
-                £{{
-                  receipt.total_cost ? receipt.total_cost.toFixed(2) : "0.00"
+                {{
+                  formatCurrency(
+                    receipt.total_cost || 0,
+                    receipt.currency,
+                    receipt.locale
+                  )
                 }}
               </span>
               <NuxtLink :to="`/receipt/${receipt.id}/`" class="h-5">
@@ -54,8 +56,9 @@
 </template>
 
 <script setup>
-import { paths } from "~~/utils/paths";
+import { formatCurrency } from "~~/utils/currency";
 import { formatDate } from "~~/utils/formatDate";
+import { paths } from "~~/utils/paths";
 
 const { receipts, loading, error, refresh } = useReceipts();
 </script>

@@ -29,6 +29,7 @@ function parseMindeeResponse(
     emoji: null,
     vendor: prediction.supplierName.value || null,
     country_code: prediction.locale.country || null,
+    locale: prediction.locale.value || null,
   };
 
   // Parse line items

@@ -65,11 +65,13 @@
               </div>
             </div>
             <div class="text-right">
-              <span class="font-semibold text-lg"
-                >£{{
-                  receipt?.total_cost ? receipt?.total_cost.toFixed(2) : 0.0
-                }}</span
-              >
+              <span class="font-semibold text-lg">{{
+                formatCurrency(
+                  receipt?.total_cost || 0,
+                  receipt?.currency,
+                  receipt?.locale
+                )
+              }}</span>
               <div class="text-xs text-gray-400">
                 {{ fields?.length ?? 0 }} items
               </div>
@@ -103,7 +105,13 @@
               </div>
               <div class="flex items-center">
                 <div class="font-medium">
-                  ${{ field.value.cost ? field.value.cost.toFixed(2) : 0 }}
+                  {{
+                    formatCurrency(
+                      field.value.cost || 0,
+                      receipt?.currency,
+                      receipt?.locale
+                    )
+                  }}
                 </div>
                 <UButton
                   variant="ghost"
@@ -120,7 +128,15 @@
             <div class="flex items-center justify-between mx-4">
               <div class="font-medium text-gray-300">Total</div>
               <div class="flex items-center">
-                <div class="font-medium">${{ totalCost }}</div>
+                <div class="font-medium">
+                  {{
+                    formatCurrency(
+                      parseFloat(totalCost),
+                      receipt?.currency,
+                      receipt?.locale
+                    )
+                  }}
+                </div>
                 <UIcon
                   :name="
                     totalCost === receipt?.total_cost?.toString()
@@ -250,6 +266,7 @@ import type {
   ReceiptItemForm,
   ReceiptMember,
 } from "~~/types/receipts";
+import { formatCurrency } from "~~/utils/currency";
 import { formatDate } from "~~/utils/formatDate";
 
 // Get the route parameter
