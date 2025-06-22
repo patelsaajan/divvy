@@ -55,3 +55,11 @@ export type ReceiptMember = {
   amount: number;
   checked: boolean;
 };
+
+export type fieldItemsSwipe = {
+  id: number;
+  left: number;
+  direction: string | null;
+  lengthX: number;
+  isSwiping: boolean;
+};

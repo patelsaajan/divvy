@@ -89,15 +89,17 @@
               @click="assignMembersToItem(idx)"
             >
               <div
-                class="absolute top-0 left-0 w-1/4 h-full bg-blue-500 flex items-center justify-center z-10 rounded"
+                :class="{ 'bg-blue-800': fieldItems[idx]?.left > 50 }"
+                class="absolute top-0 left-0 w-1/4 h-full bg-blue-500/30 flex items-center justify-center z-10 rounded gap-x-2"
               >
                 <span class="text-white font-medium">Edit</span>
+                <UIcon name="i-lucide-edit" :size="16" />
               </div>
               <div
                 :ref="el => setTargetRef(idx, el as HTMLElement)"
                 :class="{ 'transition-none': fieldItems[idx]?.isSwiping }"
-                :style="{ left: fieldItems[idx]?.left }"
-                class="absolute top-0 left-0 w-full h-full flex items-center justify-between z-20 bg-gray-800"
+                :style="{ left: `${fieldItems[idx]?.left}px` }"
+                class="absolute top-0 left-0 w-full h-full flex items-center justify-between z-20 bg-gray-800 px-4"
               >
                 <div class="flex items-center space-x-2">
                   <div class="font-medium">{{ field.value.title }}</div>
@@ -134,9 +136,11 @@
                 </div>
               </div>
               <div
-                class="absolute top-0 right-0 w-1/4 h-full bg-red-500 flex items-center justify-center z-10 rounded"
+                :class="{ 'bg-red-800': fieldItems[idx]?.left < -50 }"
+                class="absolute top-0 right-0 w-1/4 h-full bg-red-500/30 flex items-center justify-center z-10 rounded gap-x-2"
               >
                 <span class="text-white font-medium">Delete</span>
+                <UIcon name="i-heroicons-trash" :size="16" />
               </div>
             </div>
           </div>
@@ -220,6 +224,7 @@ import type {
   ReceiptEditForm,
   ReceiptItemForm,
   ReceiptMember,
+  fieldItemsSwipe,
 } from "~~/types/receipts";
 import { formatCurrency } from "~~/utils/currency";
 import { formatDate } from "~~/utils/formatDate";
@@ -251,12 +256,12 @@ const setTargetRef = (index: number, el: HTMLElement | null) => {
   targetRefs.value[index] = el
 }
 
-const fieldItems = ref([])
+const fieldItems = ref<fieldItemsSwipe[]>([])
 
 watchEffect(() => {
   fieldItems.value = Array.from({ length: fields.value.length }, (_, i) => ({
     id: i + 1,
-    left: '0',
+    left: 0,
     direction: null,
     lengthX: 0,
     isSwiping: false
@@ -272,18 +277,16 @@ const createSwipeHandler = (index: number) => {
       const maxSwipeDistance = 80
       const clampedLengthX = Math.max(-maxSwipeDistance, Math.min(maxSwipeDistance, lengthX.value))
       const length = -clampedLengthX
-      fieldItems.value[index]!.left = `${length}px`
+      fieldItems.value[index]!.left = length
       fieldItems.value[index]!.lengthX = clampedLengthX
       fieldItems.value[index]!.isSwiping = isSwiping.value
-
     },
     onSwipeEnd(e: TouchEvent, direction: UseSwipeDirection) {
-      fieldItems.value[index]!.left = '0'
+      fieldItems.value[index]!.left = 0
       fieldItems.value[index]!.isSwiping = false
       fieldItems.value[index]!.direction = direction
 
       if (Math.abs(lengthX.value) > 50) {
-        console.log(`Item ${index + 1} swipe end:`, direction)
         editItem.id          = fields.value[index]?.id ?? 0;
         editItem.title       = fields.value[index]?.value.title ?? "";
         editItem.cost        = fields.value[index]?.value.cost ?? 0.00;
