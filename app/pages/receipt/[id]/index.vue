@@ -258,7 +258,7 @@ const setTargetRef = (index: number, el: HTMLElement | null) => {
 
 const fieldItems = ref<fieldItemsSwipe[]>([])
 
-watchEffect(() => {
+watch(() => fields.value.length, () => {
   fieldItems.value = Array.from({ length: fields.value.length }, (_, i) => ({
     id: i + 1,
     left: 0,
@@ -266,6 +266,14 @@ watchEffect(() => {
     lengthX: 0,
     isSwiping: false
   }))
+
+  // Recreate swipe handlers for all items
+  nextTick(() => {
+    fieldItems.value.forEach((_, index) => {
+      createSwipeHandler(index)
+    })
+  })
+})
 
 // Create swipe handlers for each item
 const createSwipeHandler = (index: number) => {
@@ -315,16 +323,6 @@ const createSwipeHandler = (index: number) => {
     fieldItems.value[index]! .lengthX = newLengthX
   })
 }
-
-// Initialise swipe handlers for all items
-onMounted(() => {
-  fieldItems.value.forEach((_, index) => {
-    createSwipeHandler(index)
-  })
-})
-
-})
-
 
 const totalCost = computed(() => {
   return fields.value
