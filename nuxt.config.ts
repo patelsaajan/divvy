@@ -14,10 +14,12 @@ export default defineNuxtConfig({
     supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
     public: {
       supabaseUrl: process.env.SUPABASE_URL,
-      supabaseKey: process.env.SUPABASE_KEY
-    }
+      supabaseKey: process.env.SUPABASE_KEY,
+      supabaseRedirectUrl:
+        process.env.SUPABASE_REDIRECT_URL ?? "http://localhost:3000",
+    },
   },
-  
+
   supabase: {
     redirect: false,
   },

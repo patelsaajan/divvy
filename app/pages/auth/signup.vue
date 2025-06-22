@@ -195,6 +195,7 @@ const isLoading = ref(false);
 const showAccountCreated = ref(false);
 const isEmailSent = ref(false);
 const errorMsg = ref<String | null>(null);
+const config = useRuntimeConfig();
 
 const signUpWithOtp = async () => {
   if (!email.value) return;
@@ -202,7 +203,7 @@ const signUpWithOtp = async () => {
   isLoading.value = true;
   errorMsg.value = null;
 
-  const emailRedirectTo = "http://localhost:3000";
+  const emailRedirectTo = config.public.supabaseRedirectUrl as string;
 
   const { error } = await supabase.auth.signInWithOtp({
     email: email.value,
