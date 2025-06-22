@@ -51,10 +51,11 @@
             </UDropdownMenu>
           </div>
         </div>
-        <div class="bg-gray-800 rounded-lg py-4 px-2 mb-4">
+
+        <div class="bg-gray-800 rounded-lg py-4 px-2 mb-4 space-y-2">
           <!-- Receipt Header -->
           <div
-            class="flex justify-between items-center mb-3 px-4 pb-3 border-b border-gray-700"
+            class="flex justify-between items-center px-4 pb-3 border-b border-gray-700"
           >
             <div class="flex items-center">
               <div>
@@ -79,7 +80,7 @@
           </div>
 
           <!-- Receipt Line Items -->
-          <div class="space-y-2">
+          <div class="space-y-1">
             <div
               v-for="(field, idx) in fields"
               :name="`items.${idx}.title`"
@@ -92,7 +93,7 @@
                 <UAvatarGroup
                   v-if="
                     field.value.assignments &&
-                      field.value.assignments.length > 0
+                    field.value.assignments.length > 0
                   "
                   class="ml-2"
                 >
@@ -115,7 +116,7 @@
                 </div>
                 <UButton
                   variant="ghost"
-                  icon="i-lucide-trash"
+                  icon="i-heroicons-trash"
                   @click.stop="remove(idx)"
                   class="ml-2 cursor-pointer hover:text-red-500"
                 />
@@ -123,7 +124,7 @@
             </div>
           </div>
 
-          <!-- Calculate total cost as a sanity check -->
+          <!-- Total cost as a sanity check -->
           <div class="border-t border-b border-gray-700 py-6">
             <div class="flex items-center justify-between mx-4">
               <div class="font-medium text-gray-300">Total</div>
@@ -155,7 +156,7 @@
           </div>
 
           <!-- Receipt Actions -->
-          <div class="flex space-x-2 mt-3 pt-3">
+          <div class="flex space-x-2 mt-4 px-2">
             <UButton
               class="flex-1 bg-gray-700 text-white py-2 rounded text-sm flex items-center justify-center"
               @click="drawerOpen = true"
@@ -167,8 +168,8 @@
               class="flex-1 bg-orange-500 text-white py-2 rounded text-sm flex items-center justify-center"
               @click="push({ title: 'New Item', cost: 0 } as ReceiptItemForm)"
             >
-              <UIcon name="lucide:plus" :size="16" class="inline mr-1" />Add
-              Item
+              <UIcon name="lucide:plus" :size="16" class="inline mr-1" />
+              Add Item
             </UButton>
           </div>
         </div>

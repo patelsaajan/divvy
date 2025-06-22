@@ -1,11 +1,11 @@
 <template>
   <template v-if="!loading">
     <div class="px-4 py-6">
-      <div class="flex justify-between items-center mb-4">
-        <h1 class="font-semibold text-lg">Receipts</h1>
-        <NuxtLink :to="paths.upload" class="p-2">
+      <div class="flex justify-between items-center mb-8 mt-4">
+        <h1 class="font-semibold text-2xl">Your Receipts</h1>
+        <UButton :to="paths.upload" variant="ghost">
           <UIcon name="i-lucide-plus" :size="20" />
-        </NuxtLink>
+        </UButton>
       </div>
 
       <div class="space-y-3">
@@ -36,13 +36,17 @@
                   )
                 }}
               </span>
-              <NuxtLink :to="`/receipt/${receipt.id}/`" class="h-5">
+              <UButton
+                :to="`/receipt/${receipt.id}/`"
+                variant="ghost"
+                class="p-2"
+              >
                 <UIcon
                   name="i-lucide-external-link"
                   size="20"
-                  class="text-white hover:text-secondary ml-4"
+                  class="text-white hover:text-secondary"
                 />
-              </NuxtLink>
+              </UButton>
             </div>
           </div>
         </div>
