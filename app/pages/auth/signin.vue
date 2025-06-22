@@ -16,13 +16,11 @@ const signInWithOtp = async () => {
   isLoading.value = true;
   errorMsg.value = null;
 
-  const emailRedirectTo = config.public.supabaseRedirectUrl as string;
-
   const { error } = await supabase.auth.signInWithOtp({
     email: email.value,
     options: {
       shouldCreateUser: false,
-      emailRedirectTo,
+      emailRedirectTo: config.public.supabaseRedirectUrl as string,
     },
   });
 
