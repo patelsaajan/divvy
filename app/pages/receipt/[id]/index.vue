@@ -89,7 +89,7 @@
               @click="assignMembersToItem(idx)"
             >
               <div
-                :class="{ 'bg-blue-800': fieldItems[idx]?.left > 50 }"
+                :class="{ 'bg-blue-800': fieldItems[idx]?.left > 75 }"
                 class="absolute top-0 left-0 w-1/4 h-full bg-blue-500/30 flex items-center justify-center z-10 rounded gap-x-2"
               >
                 <span class="text-white font-medium">Edit</span>
@@ -136,7 +136,7 @@
                 </div>
               </div>
               <div
-                :class="{ 'bg-red-800': fieldItems[idx]?.left < -50 }"
+                :class="{ 'bg-red-800': fieldItems[idx]?.left < -75 }"
                 class="absolute top-0 right-0 w-1/4 h-full bg-red-500/30 flex items-center justify-center z-10 rounded gap-x-2"
               >
                 <span class="text-white font-medium">Delete</span>
@@ -282,7 +282,7 @@ const createSwipeHandler = (index: number) => {
   const { direction, isSwiping, lengthX, stop } = useSwipe(target, {
     passive: false,
     onSwipe() {
-      const maxSwipeDistance = 80
+      const maxSwipeDistance = 90
       const clampedLengthX = Math.max(-maxSwipeDistance, Math.min(maxSwipeDistance, lengthX.value))
       const length = -clampedLengthX
       fieldItems.value[index]!.left = length
@@ -294,7 +294,7 @@ const createSwipeHandler = (index: number) => {
       fieldItems.value[index]!.isSwiping = false
       fieldItems.value[index]!.direction = direction
 
-      if (Math.abs(lengthX.value) > 50) {
+      if (Math.abs(lengthX.value) > 75) {
         editItem.id          = fields.value[index]?.id ?? 0;
         editItem.title       = fields.value[index]?.value.title ?? "";
         editItem.cost        = fields.value[index]?.value.cost ?? 0.00;
