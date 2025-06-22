@@ -194,11 +194,11 @@
       </div>
 
       <UButton
+        icon="i-heroicons-pencil"
         @click="handleSave"
         :loading="isSaving"
         class="mt-4 w-full flex items-center justify-center gap-2 rounded-full"
       >
-        <UIcon name="i-heroicons-pencil" />
         Save
       </UButton>
     </template>
@@ -217,6 +217,9 @@ import {
   distributeAmountEvenly,
   distributePercentageEvenly,
 } from "~~/utils/currency";
+import { v4 as uuid } from "uuid";
+
+const supabase = useSupabaseClient();
 
 const props = defineProps<{
   open: boolean;
@@ -253,6 +256,8 @@ watch(
       // Create deep copies to prevent reactivity issues.
       formState.value.title = JSON.parse(JSON.stringify(props.item.title));
       formState.value.cost = JSON.parse(JSON.stringify(props.item.cost));
+
+      // Use assignments from props (now populated from page level)
       formState.value.assignments = JSON.parse(
         JSON.stringify(props.currentAssignments || [])
       );
@@ -297,8 +302,6 @@ function addMember(member: ReceiptMember) {
     // The method is determined by the current UI mode.
     method: splitMethod.value,
     value: 0,
-    numerator: null,
-    denominator: null,
   });
   splitEvenly();
 }
@@ -452,6 +455,18 @@ async function handleManageMembersClick() {
 const handleSave = async (): Promise<boolean> => {
   if (props.fieldIndex === undefined) return false;
 
+  // Check if item ID exists and convert to string
+  const itemId = props.item.id;
+  if (!itemId) {
+    toast.add({
+      title: "Cannot Save",
+      description: "Item ID is missing. Please try again.",
+      color: "red",
+      icon: "i-heroicons-x-circle",
+    });
+    return false;
+  }
+
   const total = totalAmount.value;
   const cost = formState.value.cost;
   let isValid = true;
@@ -475,32 +490,107 @@ const handleSave = async (): Promise<boolean> => {
     return false;
   }
 
-  // Create a deep copy to work with, ensuring the drawer's state isn't mutated prematurely.
-  const itemToSave = JSON.parse(JSON.stringify(formState.value));
-
-  // The big simplification: The data is now stored in a consistent format that
-  // mirrors the database schema. When the UI is in 'percent' (percentage) mode,
-  // we just need to convert the percentage value back to a currency amount before saving.
-  if (splitMethod.value === "percent") {
-    itemToSave.assignments.forEach((a: ReceiptItemAssignmentForm) => {
-      // The method is already 'percent', we just convert the UI value (percentage)
-      // back to the final currency amount for storage.
-      const calculatedAmount = (a.value ?? 0) * itemToSave.cost;
-      // Round to 2 decimal places to prevent floating point precision issues
-      a.value = Math.round(calculatedAmount * 100) / 100;
-      // We could also set numerator/denominator here for the backend if needed.
-    });
-  }
-  // No 'else' block needed. If the method is 'amount', the value is already a currency amount.
-
   isSaving.value = true;
+
   try {
-    // The emitted data now has a consistent structure.
+    // Create a deep copy to work with, ensuring the drawer's state isn't mutated prematurely.
+    const itemToSave = JSON.parse(JSON.stringify(formState.value));
+
+    // The big simplification: The data is now stored in a consistent format that
+    // mirrors the database schema. When the UI is in 'percent' (percentage) mode,
+    // we just need to convert the percentage value back to a currency amount before saving.
+    if (splitMethod.value === "percent") {
+      itemToSave.assignments.forEach((a: ReceiptItemAssignmentForm) => {
+        // The method is already 'percent', we just convert the UI value (percentage)
+        // back to the final currency amount for storage.
+        const calculatedAmount = (a.value ?? 0) * itemToSave.cost;
+        // Round to 2 decimal places to prevent floating point precision issues
+        a.value = Math.round(calculatedAmount * 100) / 100;
+        // We could also set numerator/denominator here for the backend if needed.
+      });
+    }
+    // No 'else' block needed. If the method is 'amount', the value is already a currency amount.
+
+    // Save to local form state
     emit("save", props.fieldIndex, itemToSave);
+
+    // Transform the form data to match the database schema and save to Supabase
+    const assignmentsToSave = itemToSave.assignments.map(
+      (assignment: ReceiptItemAssignmentForm) => {
+        let calculatedAmount: number;
+
+        if (splitMethod.value === "percent") {
+          // Convert percentage to calculated amount
+          calculatedAmount =
+            Math.round((assignment.value ?? 0) * itemToSave.cost * 100) / 100;
+        } else {
+          // Amount mode - value is already the calculated amount
+          calculatedAmount = assignment.value ?? 0;
+        }
+
+        return {
+          id: assignment.id, // Preserve the ID if it exists
+          receipt_item_id: itemId.toString(), // Convert to string for UUID
+          user_name: assignment.user_name,
+          method: assignment.method,
+          value: assignment.value,
+          calculated_amount: calculatedAmount,
+        };
+      }
+    );
+
+    // Save to Supabase
+    // Separate new assignments (without ID) from existing ones (with ID)
+    const newAssignments = assignmentsToSave
+      .filter((assignment) => !assignment.id)
+      .map((assignment) => ({
+        ...assignment,
+        id: uuid(), // Generate a UUID for new assignments
+      }));
+    const existingAssignments = assignmentsToSave.filter(
+      (assignment) => assignment.id
+    );
+
+    // Insert new assignments
+    if (newAssignments.length > 0) {
+      const { error: insertError } = await supabase
+        .from("receipt_item_assignments")
+        .insert(newAssignments);
+
+      if (insertError) {
+        throw insertError;
+      }
+    }
+
+    // Update existing assignments using upsert with ID
+    if (existingAssignments.length > 0) {
+      const { error: upsertError } = await supabase
+        .from("receipt_item_assignments")
+        .upsert(existingAssignments, {
+          onConflict: "id",
+        });
+
+      if (upsertError) {
+        throw upsertError;
+      }
+    }
+
+    toast.add({
+      title: "Success",
+      description: "Item saved to form and database",
+      color: "green",
+      icon: "i-heroicons-check-circle",
+    });
+
     emit("close");
     return true;
   } catch (error) {
-    console.error("Error saving item:", error);
+    toast.add({
+      title: "Error",
+      description: "Failed to save to database. Please try again.",
+      color: "red",
+      icon: "i-heroicons-x-circle",
+    });
     return false;
   } finally {
     isSaving.value = false;

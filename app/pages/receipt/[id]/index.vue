@@ -106,7 +106,7 @@
                     variant="ghost"
                     icon="lucide:edit"
                     @click.stop="
-                      editItem.id = field.id;
+                      editItem.id = field.value.id;
                       editItem.title = field.value.title;
                       editItem.cost = field.value.cost;
                       editItem.fieldIndex = idx;
@@ -118,7 +118,7 @@
                   <UAvatarGroup
                     v-if="
                       field.value.assignments &&
-                        field.value.assignments.length > 0
+                      field.value.assignments.length > 0
                     "
                     class="ml-2"
                   >
@@ -208,7 +208,7 @@
           </div>
           <div class="flex justify-between items-center px-2">
             <UButton
-              icon="i-lucide-calculator"
+              icon="i-lucide-chart-bar"
               class="flex-1 py-2 bg-gray-700 text-white rounded text-sm flex items-center justify-center"
               :to="`/summary/${id}`"
             >
@@ -262,8 +262,11 @@ import type {
 import { formatCurrency } from "~~/utils/currency";
 import { formatDate } from "~~/utils/formatDate";
 
-// Get the route parameter
 const route = useRoute();
+const toast = useToast();
+const supabase = useSupabaseClient();
+
+// Get the route parameter
 const id = route.params.id;
 const memberDrawerOpen = ref(false);
 const editDrawerOpen = ref(false);
@@ -338,9 +341,10 @@ const createSwipeHandler = (index: number) => {
       fieldItems.value[index]!.direction = direction;
 
       if (Math.abs(lengthX.value) > 75) {
-        editItem.id = fields.value[index]?.id ?? 0;
+        editItem.id = fields.value[index].value.id;
         editItem.title = fields.value[index]?.value.title ?? "";
         editItem.cost = fields.value[index]?.value.cost ?? 0.0;
+        editItem.fieldIndex = index;
         editDrawerOpen.value = true;
 
         // Handle actions based on direction
@@ -376,13 +380,39 @@ const totalCost = computed(() => {
 // Reset form when receipt items are successfully loaded
 watch(
   [receiptStatus, receiptItems],
-  () => {
+  async () => {
     if (
       receiptStatus.value === "success" &&
       receiptItems.value &&
       !values.items
     ) {
-      resetForm({ values: { items: receiptItems.value } });
+      // Fetch receipt with all items and assignments using join
+      const receiptData = await fetchReceiptWithItemsAndAssignments();
+
+      if (receiptData && receiptData.receipt_items) {
+        // Map receipt items with their assignments to the form format
+        const itemsWithAssignments = receiptData.receipt_items.map(
+          (item: any) => ({
+            id: item.id,
+            title: item.title,
+            cost: item.cost,
+            assignments: (item.receipt_item_assignments || []).map(
+              (assignment: any) => ({
+                id: assignment.id,
+                user_name: assignment.user_name,
+                method: assignment.method,
+                value: assignment.value,
+              })
+            ),
+          })
+        );
+
+        // Reset form with populated data
+        resetForm({ values: { items: itemsWithAssignments } });
+      } else {
+        // Fallback to original receipt items if join query fails
+        resetForm({ values: { items: receiptItems.value } });
+      }
     }
   },
   { immediate: true }
@@ -462,7 +492,13 @@ const assignMembersToItemHandler = (idx: number) => {
   const selectedMembers = members.value.filter((member) => member.checked);
 
   if (selectedMembers.length === 0) {
-    console.log("No members selected");
+    toast.add({
+      title: "No Members Selected",
+      description:
+        "Please select at least one member from the dropdown before assigning to items.",
+      color: "yellow",
+      icon: "i-heroicons-exclamation-triangle",
+    });
     return;
   }
 
@@ -476,4 +512,45 @@ const assignMembersToItemHandler = (idx: number) => {
   // Update the field array item
   update(idx, updatedItem);
 };
+
+// Function to fetch receipt with all items and assignments
+async function fetchReceiptWithItemsAndAssignments() {
+  try {
+    const { data, error } = await supabase
+      .from("receipts")
+      .select(
+        `
+        *,
+        receipt_items (
+          *,
+          receipt_item_assignments (*)
+        )
+      `
+      )
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      toast.add({
+        title: "Error Loading Receipt",
+        description:
+          "Failed to load receipt data. Please try refreshing the page.",
+        color: "red",
+        icon: "i-heroicons-x-circle",
+      });
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    toast.add({
+      title: "Error Loading Receipt",
+      description: "An unexpected error occurred while loading the receipt.",
+      color: "red",
+      icon: "i-heroicons-x-circle",
+    });
+
+    return null;
+  }
+}
 </script>

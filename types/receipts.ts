@@ -25,8 +25,6 @@ export type ReceiptItemAssignmentSchema = {
   receipt_item_id: string;
   user_name: string;
   method: "equal" | "percent" | "amount";
-  numerator: number | null;
-  denominator: number | null;
   value: number | null;
   calculated_amount: number | null;
 };
@@ -35,10 +33,11 @@ export type ReceiptItemAssignmentSchema = {
 
 export type ReceiptItemAssignmentForm = Omit<
   ReceiptItemAssignmentSchema,
-  "receipt_item_id" | "calculated_amount" | "id"
+  "receipt_item_id" | "calculated_amount"
 > & { id?: string };
 
 export type ReceiptItemForm = {
+  id?: string | number;
   title: string;
   cost: number;
   assignments: ReceiptItemAssignmentForm[];

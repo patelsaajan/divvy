@@ -41,6 +41,7 @@ import { settingsGroups } from "~~/dummyData/settings";
 import { paths } from "~~/utils/paths";
 
 const supabase = useSupabaseClient();
+const toast = useToast();
 const isSigningOut = ref(false);
 
 const handleSignOut = async () => {
@@ -50,16 +51,24 @@ const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      console.error("Sign out error:", error);
-      // You could show an error toast here
+      toast.add({
+        title: "Sign Out Failed",
+        description: "Failed to sign out. Please try again.",
+        color: "red",
+        icon: "i-heroicons-x-circle",
+      });
       return;
     }
 
     // Redirect to sign in page after successful sign out
     await navigateTo(paths.auth.signin);
   } catch (error) {
-    console.error("Sign out failed:", error);
-    // You could show an error toast here
+    toast.add({
+      title: "Sign Out Error",
+      description: "An unexpected error occurred while signing out.",
+      color: "red",
+      icon: "i-heroicons-x-circle",
+    });
   } finally {
     isSigningOut.value = false;
   }

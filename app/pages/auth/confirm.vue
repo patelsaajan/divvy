@@ -29,7 +29,6 @@ if (process.server) {
         await navigateTo(paths.auth.error, { redirectCode: 302 });
       }
     } catch (error) {
-      console.error("OTP verification error:", error);
       await navigateTo(paths.auth.error, { redirectCode: 302 });
     }
   } else {

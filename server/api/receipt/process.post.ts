@@ -1,8 +1,7 @@
 import { v4 as uuid } from "uuid";
 import { ReceiptItemSchema, ReceiptSchema } from "~~/types/receipts";
+import { mindee, mindeeClient } from "~~/utils/mindee";
 import { supabase } from "~~/utils/supabase";
-
-import mockResponse from "~~/mock/receipt4-tesco.json";
 
 const getFileExtension = (fileName: string) => {
   return (
@@ -85,20 +84,16 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // Commented out during development to not waste mindee credits (250 per month)
-  // TODO: Uncomment this once product is live
   // Using the signed URL, called mindee api to process the receipt
-  // const inputSource = mindeeClient.docFromUrl(data.signedUrl);
-  // const apiResponse = await mindeeClient.parse(
-  //   mindee.product.ReceiptV5,
-  //   inputSource
-  // );
-
-  // return {id: receiptId, data: apiResponse.document}
+  const inputSource = mindeeClient.docFromUrl(data.signedUrl);
+  const apiResponse = await mindeeClient.parse(
+    mindee.product.ReceiptV5,
+    inputSource
+  );
 
   // Parse the response from mindee
   const { receipt, items } = parseMindeeResponse(
-    { document: mockResponse } as unknown as MindeeResponse,
+    { document: apiResponse.document } as unknown as MindeeResponse,
     receiptId,
     filePath
   );
@@ -125,5 +120,5 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  return { id: receiptId, data: { receipt, items } };
+  return { id: receiptId };
 });

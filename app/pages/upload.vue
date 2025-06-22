@@ -92,6 +92,7 @@ import { endpoints } from "~~/utils/endpoints";
 const isUploading = ref(false);
 const file = ref(null);
 const previewUrl = ref(null);
+const toast = useToast();
 
 const onFileChange = (e) => {
   file.value = e.target.files[0];
@@ -101,19 +102,36 @@ const onFileChange = (e) => {
 const handleUpload = async (e) => {
   e.preventDefault();
   isUploading.value = true;
-  const formData = new FormData();
-  formData.append("file", file.value);
-  const response = await fetch(endpoints.receipt.process, {
-    method: "POST",
-    body: formData,
-  });
 
-  if (response.ok) {
-    const data = await response.json();
+  try {
+    const formData = new FormData();
+    formData.append("file", file.value);
+    const response = await fetch(endpoints.receipt.process, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      isUploading.value = false;
+      navigateTo("/receipt/new");
+    } else {
+      toast.add({
+        title: "Upload Failed",
+        description: "Failed to upload receipt. Please try again.",
+        color: "red",
+        icon: "i-heroicons-x-circle",
+      });
+    }
+  } catch (error) {
+    toast.add({
+      title: "Upload Error",
+      description: "An unexpected error occurred while uploading the receipt.",
+      color: "red",
+      icon: "i-heroicons-x-circle",
+    });
+  } finally {
     isUploading.value = false;
-    navigateTo("/receipt/new");
-  } else {
-    console.error("Failed to upload receipt");
   }
 };
 </script>

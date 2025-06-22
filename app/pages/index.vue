@@ -37,17 +37,27 @@
                   )
                 }}
               </span>
-              <UButton
-                :to="`/receipt/${receipt.id}/`"
-                variant="ghost"
-                class="p-2"
-              >
-                <UIcon
-                  name="i-lucide-external-link"
-                  size="20"
-                  class="text-white hover:text-secondary"
-                />
-              </UButton>
+              <UTooltip text="View Receipt">
+                <UButton
+                  :to="`/receipt/${receipt.id}/`"
+                  variant="ghost"
+                  class="p-2"
+                >
+                  <UIcon name="i-lucide-edit" size="20" />
+                  <span class="sr-only">View Receipt</span>
+                </UButton>
+              </UTooltip>
+
+              <UTooltip text="View Summary">
+                <UButton
+                  :to="`/summary/${receipt.id}/`"
+                  variant="ghost"
+                  class="p-2"
+                >
+                  <UIcon name="i-lucide-chart-bar" size="20" />
+                  <span class="sr-only">View Summary</span>
+                </UButton>
+              </UTooltip>
             </div>
           </div>
         </div>
