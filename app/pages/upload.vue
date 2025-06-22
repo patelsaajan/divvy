@@ -114,7 +114,7 @@ const handleUpload = async (e) => {
     if (response.ok) {
       const data = await response.json();
       isUploading.value = false;
-      navigateTo("/receipt/new");
+      navigateTo(paths.receipt(data.id));
     } else {
       toast.add({
         title: "Upload Failed",

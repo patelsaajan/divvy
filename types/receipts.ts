@@ -2,6 +2,7 @@
 
 export type ReceiptSchema = {
   id: string;
+  user_id: string;
   storage_path: string;
   total_cost: number | null;
   currency: string | null;

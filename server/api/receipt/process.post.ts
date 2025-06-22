@@ -1,7 +1,7 @@
+import { serverSupabaseClient } from "#supabase/server";
 import { v4 as uuid } from "uuid";
 import { ReceiptItemSchema, ReceiptSchema } from "~~/types/receipts";
 import { mindee, mindeeClient } from "~~/utils/mindee";
-import { supabase } from "~~/utils/supabase";
 
 const getFileExtension = (fileName: string) => {
   return (
@@ -13,7 +13,8 @@ const getFileExtension = (fileName: string) => {
 function parseMindeeResponse(
   mindeeResponse: MindeeResponse,
   receiptId: string,
-  storagePath: string
+  storagePath: string,
+  userId: string
 ) {
   const { prediction } = mindeeResponse.document.inference;
 
@@ -21,14 +22,15 @@ function parseMindeeResponse(
   const receipt: Omit<ReceiptSchema, "uploaded_at"> = {
     id: receiptId,
     storage_path: storagePath,
-    total_cost: prediction.totalAmount.value || null,
-    currency: prediction.locale.currency || null,
+    total_cost: prediction.totalAmount.value ?? 0,
+    currency: prediction.locale.currency ?? "GBP",
     raw_json: mindeeResponse,
     title: null,
     emoji: null,
-    vendor: prediction.supplierName.value || null,
-    country_code: prediction.locale.country || null,
-    locale: prediction.locale.value || null,
+    vendor: prediction.supplierName.value ?? null,
+    country_code: prediction.locale.country ?? 'GB',
+    locale: prediction.locale.value ?? "en-GB",
+    user_id: userId,
   };
 
   // Parse line items
@@ -36,7 +38,7 @@ function parseMindeeResponse(
     prediction.lineItems?.map((item, index) => ({
       receipt_id: receiptId,
       title: item.description || `Item ${index + 1}`,
-      cost: item.totalAmount || null,
+      cost: item.totalAmount ?? 0,
     })) ?? [];
 
   return { receipt, items };
@@ -44,6 +46,9 @@ function parseMindeeResponse(
 
 export default defineEventHandler(async (event) => {
   const formData = await readMultipartFormData(event);
+  const supabase = await serverSupabaseClient(event);
+
+  const { data: { user } } = await supabase.auth.getUser();
 
   const file = formData?.find((item) => item.type === "image/jpeg");
   if (!file) {
@@ -53,10 +58,17 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  if (!user) {
+    return createError({
+      statusCode: 401,
+      statusMessage: "Unauthorized",
+    });
+  }
+
   // Upload the file to supabase storage
   const receiptId = uuid();
   const fileName = `${receiptId}.${getFileExtension(file.filename ?? "jpg")}`;
-  const filePath = `${fileName}`; // Change this to `${userId}/${receiptId}` when auth is setup and update bucket policy
+  const filePath = `${user.id}/${fileName}`;
 
   const { error: uploadError } = await supabase.storage
     .from("receipts")
@@ -95,16 +107,17 @@ export default defineEventHandler(async (event) => {
   const { receipt, items } = parseMindeeResponse(
     { document: apiResponse.document } as unknown as MindeeResponse,
     receiptId,
-    filePath
+    filePath,
+    user.id
   );
 
   // Upload the parsed response to Supabase
   const { error: insertError } = await supabase
     .from("receipts")
-    .insert(receipt);
+    .insert(receipt as any);
   const { error: insertItemsError } = await supabase
     .from("receipt_items")
-    .insert(items);
+    .insert(items as any);
 
   if (insertError) {
     return createError({
