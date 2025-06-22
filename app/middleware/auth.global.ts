@@ -1,4 +1,5 @@
 import { paths } from "~~/utils/paths";
+import { supabase } from "~~/utils/supabase";
 
 export default defineNuxtRouteMiddleware(async (to) => {
   // Skip middleware for static assets
@@ -9,8 +10,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
   ) {
     return;
   }
-
-  const supabase = useSupabaseClient();
 
   // Get the current user
   const {

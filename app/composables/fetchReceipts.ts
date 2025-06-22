@@ -1,19 +1,20 @@
 import { useState } from "#app";
-import { useSupabaseClient } from "#imports"; // auto-imported by Nuxt Supabase
+import type { Tables } from "~~/types/database.types";
+import { supabase } from "~~/utils/supabase";
 
 export const useReceipts = () => {
-  const receipts = useState<any[]>("receipts", () => []);
+  const receipts = useState<Tables<"receipts">[]>("receipts", () => []);
 
   const loading = ref(false);
   const error = ref<string | null>(null);
-
-  const client = useSupabaseClient();
 
   async function refresh() {
     loading.value = true;
     error.value = null;
 
-    const { data, error: sbError } = await client.from("receipts").select("*");
+    const { data, error: sbError } = await supabase
+      .from("receipts")
+      .select("*");
 
     if (sbError) {
       error.value = sbError.message;

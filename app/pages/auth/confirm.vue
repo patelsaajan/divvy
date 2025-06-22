@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { VerifyOtpParams } from "@supabase/supabase-js";
 import { paths } from "~~/utils/paths";
+import { supabase } from "~~/utils/supabase";
 
 definePageMeta({ layout: false });
 
@@ -13,7 +14,6 @@ if (process.server) {
     try {
       // Use the server-side Supabase client
       const config = useRuntimeConfig();
-      const supabase = useSupabaseClient();
 
       const { error } = await supabase.auth.verifyOtp({
         type,
@@ -63,8 +63,6 @@ onMounted(async () => {
     isLoading.value = false;
     return;
   }
-
-  const supabase = useSupabaseClient();
 
   try {
     const { error: otpError } = await supabase.auth.verifyOtp({
