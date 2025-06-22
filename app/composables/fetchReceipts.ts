@@ -9,7 +9,7 @@ export const useReceipts = () => {
 
   const client = useSupabaseClient();
 
-  async function fetchItems() {
+  async function refresh() {
     loading.value = true;
     error.value = null;
 
@@ -28,11 +28,11 @@ export const useReceipts = () => {
     receipts,
     (newReceipts) => {
       if (newReceipts.length === 0 && !loading.value) {
-        fetchItems();
+        refresh();
       }
     },
     { immediate: true }
   );
 
-  return { receipts, loading, error, fetchItems };
+  return { receipts, loading, error, refresh };
 };
