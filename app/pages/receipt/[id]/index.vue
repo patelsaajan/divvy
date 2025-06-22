@@ -86,7 +86,7 @@
               :name="`items.${idx}.title`"
               :key="field.key"
               class="relative flex justify-between items-center py-2 px-3 rounded-lg hover:bg-gray-700/50 cursor-pointer transition-colors h-12 overflow-hidden"
-              @click="assignMembersToItem(idx)"
+              @click="assignMembersToItemHandler(idx)"
             >
               <div
                 :class="{ 'bg-blue-800': fieldItems[idx]?.left > 75 }"
@@ -102,11 +102,23 @@
                 class="absolute top-0 left-0 w-full h-full flex items-center justify-between z-20 bg-gray-800 px-4"
               >
                 <div class="flex items-center space-x-2">
+                  <UButton
+                    variant="ghost"
+                    icon="lucide:edit"
+                    @click.stop="
+                      editItem.id = field.id;
+                      editItem.title = field.value.title;
+                      editItem.cost = field.value.cost;
+                      editItem.fieldIndex = idx;
+                      editDrawerOpen = true;
+                    "
+                    class="ml-2 cursor-pointer hover:text-blue-500"
+                  />
                   <div class="font-medium">{{ field.value.title }}</div>
                   <UAvatarGroup
                     v-if="
                       field.value.assignments &&
-                        field.value.assignments.length > 0
+                      field.value.assignments.length > 0
                     "
                     class="ml-2"
                   >
@@ -196,16 +208,27 @@
         </div>
       </div>
     </div>
+
     <DrawerMembers
       :open="memberDrawerOpen"
       :members="members"
       @close="memberDrawerOpen = false"
       @removeMember="removeMember"
+      @addMember="addMember"
     />
+
     <DrawerEditItem
       :open="editDrawerOpen"
       :item="editItem"
+      :field-index="editItem.fieldIndex"
+      :set-field-value="setFieldValue"
+      :members="members"
+      :current-assignments="
+        fields[editItem.fieldIndex]?.value.assignments || []
+      "
       @close="editDrawerOpen = false"
+      @save="handleEditItemSave"
+      @open-member-drawer="memberDrawerOpen = true"
     />
   </template>
 
@@ -215,9 +238,9 @@
 </template>
 
 <script setup lang="ts">
-import type { UseSwipeDirection } from '@vueuse/core'
-import { useSwipe } from '@vueuse/core'
-import { shallowRef } from 'vue'
+import type { UseSwipeDirection } from "@vueuse/core";
+import { useSwipe } from "@vueuse/core";
+import { shallowRef } from "vue";
 import type { DropdownMenuItem } from "@nuxt/ui";
 import { useFieldArray, useForm } from "vee-validate";
 import type {
@@ -230,11 +253,11 @@ import { formatCurrency } from "~~/utils/currency";
 import { formatDate } from "~~/utils/formatDate";
 
 // Get the route parameter
-const route            = useRoute();
-const id               = route.params.id;
+const route = useRoute();
+const id = route.params.id;
 const memberDrawerOpen = ref(false);
-const editDrawerOpen   = ref(false);
-const editItem         = reactive({ id: 0, title: "", cost: 0.00 });
+const editDrawerOpen = ref(false);
+const editItem = reactive({ id: 0, title: "", cost: 0.0, fieldIndex: 0 });
 
 // Use the composable
 const {
@@ -247,82 +270,92 @@ const {
 const { handleSubmit, resetForm, values, setFieldValue } =
   useForm<ReceiptEditForm>({ initialValues: {} });
 
-const { remove, push, fields } = useFieldArray<ReceiptItemForm>("items");
+const { remove, push, fields, update } =
+  useFieldArray<ReceiptItemForm>("items");
+
+// Use the reusable member assignment function
+const { assignMembersToItem } = useMemberAssignment();
 
 // Store refs for each target
-const targetRefs = shallowRef<(HTMLElement | null)[]>([])
+const targetRefs = shallowRef<(HTMLElement | null)[]>([]);
 
 const setTargetRef = (index: number, el: HTMLElement | null) => {
-  targetRefs.value[index] = el
-}
+  targetRefs.value[index] = el;
+};
 
-const fieldItems = ref<fieldItemsSwipe[]>([])
+const fieldItems = ref<fieldItemsSwipe[]>([]);
 
-watch(() => fields.value.length, () => {
-  fieldItems.value = Array.from({ length: fields.value.length }, (_, i) => ({
-    id: i + 1,
-    left: 0,
-    direction: null,
-    lengthX: 0,
-    isSwiping: false
-  }))
+watch(
+  () => fields.value.length,
+  () => {
+    fieldItems.value = Array.from({ length: fields.value.length }, (_, i) => ({
+      id: i + 1,
+      left: 0,
+      direction: null,
+      lengthX: 0,
+      isSwiping: false,
+    }));
 
-  // Recreate swipe handlers for all items
-  nextTick(() => {
-    fieldItems.value.forEach((_, index) => {
-      createSwipeHandler(index)
-    })
-  })
-})
+    // Recreate swipe handlers for all items
+    nextTick(() => {
+      fieldItems.value.forEach((_, index) => {
+        createSwipeHandler(index);
+      });
+    });
+  }
+);
 
 // Create swipe handlers for each item
 const createSwipeHandler = (index: number) => {
-  const target = computed(() => targetRefs.value[index])
+  const target = computed(() => targetRefs.value[index]);
 
   const { direction, isSwiping, lengthX, stop } = useSwipe(target, {
     passive: false,
     onSwipe() {
-      const maxSwipeDistance = 90
-      const clampedLengthX = Math.max(-maxSwipeDistance, Math.min(maxSwipeDistance, lengthX.value))
-      const length = -clampedLengthX
-      fieldItems.value[index]!.left = length
-      fieldItems.value[index]!.lengthX = clampedLengthX
-      fieldItems.value[index]!.isSwiping = isSwiping.value
+      const maxSwipeDistance = 90;
+      const clampedLengthX = Math.max(
+        -maxSwipeDistance,
+        Math.min(maxSwipeDistance, lengthX.value)
+      );
+      const length = -clampedLengthX;
+      fieldItems.value[index]!.left = length;
+      fieldItems.value[index]!.lengthX = clampedLengthX;
+      fieldItems.value[index]!.isSwiping = isSwiping.value;
     },
     onSwipeEnd(e: TouchEvent, direction: UseSwipeDirection) {
-      fieldItems.value[index]!.left = 0
-      fieldItems.value[index]!.isSwiping = false
-      fieldItems.value[index]!.direction = direction
+      fieldItems.value[index]!.left = 0;
+      fieldItems.value[index]!.isSwiping = false;
+      fieldItems.value[index]!.direction = direction;
 
       if (Math.abs(lengthX.value) > 75) {
-        editItem.id          = fields.value[index]?.id ?? 0;
-        editItem.title       = fields.value[index]?.value.title ?? "";
-        editItem.cost        = fields.value[index]?.value.cost ?? 0.00;
+        editItem.id = fields.value[index]?.id ?? 0;
+        editItem.title = fields.value[index]?.value.title ?? "";
+        editItem.cost = fields.value[index]?.value.cost ?? 0.0;
         editDrawerOpen.value = true;
 
         // Handle actions based on direction
-        if (direction === 'left') {
-          console.log(`Edit item ${index + 1}`)
-        } else if (direction === 'right') {
-          console.log(`Delete item ${index + 1}`)
+        if (direction === "left") {
+          console.log(`Edit item ${index + 1}`);
+        } else if (direction === "right") {
+          console.log(`Delete item ${index + 1}`);
         }
       }
     },
-  })
+  });
 
   // Watch for changes and update the item
   watch(direction, (newDirection) => {
-    fieldItems.value[index]!.direction = newDirection
-  })
+    fieldItems.value[index]!.direction = newDirection;
+  });
 
   watch(isSwiping, (newIsSwiping) => {
-    fieldItems.value[index]!.isSwiping = newIsSwiping
-  })
+    fieldItems.value[index]!.isSwiping = newIsSwiping;
+  });
 
   watch(lengthX, (newLengthX) => {
-    fieldItems.value[index]! .lengthX = newLengthX
-  })
-}
+    fieldItems.value[index]!.lengthX = newLengthX;
+  });
+};
 
 const totalCost = computed(() => {
   return fields.value
@@ -398,7 +431,23 @@ const members = ref<ReceiptMember[]>([
   { id: 3, name: "Bob Johnson", amount: 150, checked: false },
 ]);
 
-const assignMembersToItem = (idx: number) => {
+const removeMember = (id: number) => {
+  members.value = members.value.filter((member) => member.id !== id);
+};
+
+const addMember = (newMember: ReceiptMember) => {
+  members.value.push(newMember);
+};
+
+const handleEditItemSave = (
+  fieldIndex: number,
+  updatedItem: ReceiptItemForm
+) => {
+  // Update the field array item using the update method
+  update(fieldIndex, updatedItem);
+};
+
+const assignMembersToItemHandler = (idx: number) => {
   // Get all selected members
   const selectedMembers = members.value.filter((member) => member.checked);
 
@@ -411,55 +460,10 @@ const assignMembersToItem = (idx: number) => {
   const currentItem = fields.value[idx];
   if (!currentItem) return;
 
-  // Get current assignments
-  const currentAssignments = currentItem.value.assignments || [];
-  const currentAssignedNames = currentAssignments.map((a) => a.user_name);
+  // Use the reusable function to assign members
+  const updatedItem = assignMembersToItem(currentItem.value, selectedMembers);
 
-  // Create new assignments by toggling selected members
-  let newAssignments = [...currentAssignments];
-
-  selectedMembers.forEach((member) => {
-    const isCurrentlyAssigned = currentAssignedNames.includes(member.name);
-
-    if (isCurrentlyAssigned) {
-      // Remove member from assignments
-      newAssignments = newAssignments.filter(
-        (a) => a.user_name !== member.name
-      );
-    } else {
-      // Add member to assignments
-      const newAssignment = {
-        user_name: member.name,
-        method: "equal" as const,
-        numerator: 1,
-        denominator: newAssignments.length + 1, // Will be updated after all additions
-        value: 0,
-      };
-      newAssignments.push(newAssignment);
-    }
-  });
-
-  // Update denominators for equal distribution
-  if (newAssignments.length > 0) {
-    newAssignments = newAssignments.map((assignment) => ({
-      ...assignment,
-      denominator: newAssignments.length,
-    }));
-  }
-
-  // Update the item's assignments by updating the entire field
-  const updatedItem = {
-    ...currentItem.value,
-    assignments: newAssignments,
-  };
-
-  // Use the field array's update method
-  if (fields.value[idx]) {
-    fields.value[idx].value = updatedItem;
-  }
-};
-
-const removeMember = (id: number) => {
-  members.value = members.value.filter((member) => member.id !== id);
+  // Update the field array item
+  update(idx, updatedItem);
 };
 </script>

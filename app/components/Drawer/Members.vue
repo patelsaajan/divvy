@@ -1,7 +1,7 @@
 <template>
   <!-- Members Drawer -->
   <UDrawer
-    v-model:open="props.open"
+    v-model:open="isOpen"
     should-scale-background
     inset
     set-background-color-on-scale
@@ -75,19 +75,30 @@
 </template>
 
 <script lang="ts" setup>
-import type { ReceiptMember } from '~~/types/receipts';
+import type { ReceiptMember } from "~~/types/receipts";
 
 const newPerson = ref("");
 
 const props = defineProps<{
-    open: boolean;
-    members: ReceiptMember[];
+  open: boolean;
+  members: ReceiptMember[];
 }>();
 
 const emit = defineEmits<{
-  (e: 'close'): void;
-  (e: 'removeMember', id: number): void;
+  (e: "close"): void;
+  (e: "removeMember", id: number): void;
+  (e: "addMember", member: ReceiptMember): void;
 }>();
+
+// Create a computed property for two-way binding
+const isOpen = computed({
+  get: () => props.open,
+  set: (value: boolean) => {
+    if (!value) {
+      emit("close");
+    }
+  },
+});
 
 const addPerson = () => {
   if (!newPerson.value.trim()) return;
@@ -99,7 +110,7 @@ const addPerson = () => {
     checked: false,
   };
 
-  props.members.push(newMember);
+  emit("addMember", newMember);
   newPerson.value = "";
 };
 </script>
