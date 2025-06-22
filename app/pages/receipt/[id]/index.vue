@@ -92,7 +92,7 @@
                 <UAvatarGroup
                   v-if="
                     field.value.assignments &&
-                    field.value.assignments.length > 0
+                      field.value.assignments.length > 0
                   "
                   class="ml-2"
                 >
@@ -174,79 +174,12 @@
         </div>
       </div>
     </div>
-
-    <!-- Members Drawer -->
-    <UDrawer
-      v-model:open="drawerOpen"
-      should-scale-background
-      set-background-color-on-scale
-    >
-      <template #header>
-        <div class="flex items-center justify-between">
-          <h3
-            class="text-base font-semibold leading-6 text-gray-900 dark:text-white"
-          >
-            Members
-          </h3>
-          <UButton
-            color="neutral"
-            variant="ghost"
-            icon="i-heroicons-x-mark-20-solid"
-            class="-my-1"
-            @click="drawerOpen = false"
-          />
-        </div>
-      </template>
-
-      <template #body>
-        <!-- Members -->
-        <div class="space-y-4 min-h-[75vh]">
-          <div
-            v-for="person in members"
-            :key="person.id"
-            class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
-          >
-            <div class="flex items-center space-x-3">
-              <UAvatar :alt="person.name" />
-              <div>
-                <p class="font-medium text-gray-900 dark:text-white">
-                  {{ person.name }}
-                </p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                  ${{ person.amount.toFixed(2) }}
-                </p>
-              </div>
-            </div>
-            <UButton
-              variant="ghost"
-              color="error"
-              icon="i-heroicons-trash"
-              @click="removeMember(person.id)"
-            />
-          </div>
-
-          <!-- Add new member form -->
-          <div
-            class="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700"
-          >
-            <UInput
-              v-model="newPerson"
-              placeholder="Enter a name"
-              class="flex-1"
-              @keyup.enter="addPerson"
-            />
-            <UButton
-              color="primary"
-              icon="i-heroicons-plus"
-              @click="addPerson"
-              :disabled="!newPerson.trim()"
-            >
-              Add
-            </UButton>
-          </div>
-        </div>
-      </template>
-    </UDrawer>
+    <MembersDraw
+      :open="drawerOpen"
+      :members="members"
+      @close="drawerOpen = false"
+      @removeMember="removeMember"
+    />
   </template>
 
   <template v-else-if="loading">
@@ -268,6 +201,7 @@ import { formatDate } from "~~/utils/formatDate";
 // Get the route parameter
 const route = useRoute();
 const id = route.params.id;
+const drawerOpen = ref(false);
 
 // Use the composable
 const {
@@ -350,33 +284,11 @@ const createMemberItems = () => {
 
 const memberItems = computed(createMemberItems);
 
-const drawerOpen = ref(false);
-
-const newPerson = ref("");
-
 const members = ref<ReceiptMember[]>([
   { id: 1, name: "John Doe", amount: 100, checked: false },
   { id: 2, name: "Jane Smith", amount: 200, checked: false },
   { id: 3, name: "Bob Johnson", amount: 150, checked: false },
 ]);
-
-const addPerson = () => {
-  if (!newPerson.value.trim()) return;
-
-  const newMember: ReceiptMember = {
-    id: Date.now(),
-    name: newPerson.value.trim(),
-    amount: 0,
-    checked: false,
-  };
-
-  members.value.push(newMember);
-  newPerson.value = "";
-};
-
-const removeMember = (id: number) => {
-  members.value = members.value.filter((member) => member.id !== id);
-};
 
 const assignMembersToItem = (idx: number) => {
   // Get all selected members
@@ -437,5 +349,9 @@ const assignMembersToItem = (idx: number) => {
   if (fields.value[idx]) {
     fields.value[idx].value = updatedItem;
   }
+};
+
+const removeMember = (id: number) => {
+  members.value = members.value.filter((member) => member.id !== id);
 };
 </script>
