@@ -1,3 +1,4 @@
+import { v4 as uuid } from "uuid";
 import type {
   ReceiptItemAssignmentForm,
   ReceiptItemForm,
@@ -24,10 +25,9 @@ export const useMemberAssignment = () => {
 
     const newAssignments: ReceiptItemAssignmentForm[] = selectedMembers.map(
       (member, index) => ({
+        id: uuid(),
         user_name: member.name,
         method: "equal",
-        numerator: 1,
-        denominator: numAssignments,
         value: distributedValues[index] || 0,
       })
     );
@@ -51,10 +51,9 @@ export const useMemberAssignment = () => {
   ): ReceiptItemForm => {
     const newAssignments: ReceiptItemAssignmentForm[] = membersToAssign.map(
       (memberName) => ({
+        id: uuid(),
         user_name: memberName,
         method: "equal",
-        numerator: 1,
-        denominator: membersToAssign.length,
         value: 0,
       })
     );
@@ -79,13 +78,6 @@ export const useMemberAssignment = () => {
     const newAssignments = currentAssignments.filter(
       (assignment) => !membersToRemove.includes(assignment.user_name)
     );
-
-    // Update denominators for remaining assignments
-    if (newAssignments.length > 0) {
-      newAssignments.forEach((assignment) => {
-        assignment.denominator = newAssignments.length;
-      });
-    }
 
     return {
       ...currentItem,

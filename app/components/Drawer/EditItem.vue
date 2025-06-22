@@ -32,7 +32,7 @@
             <UInputNumber
               v-model="formState.cost"
               :min="0"
-              :step="0.5"
+              :step="0.01"
               :precision="2"
               :format-options="{
                 style: 'currency',
@@ -529,7 +529,7 @@ const handleSave = async (): Promise<boolean> => {
         }
 
         return {
-          id: assignment.id, // Preserve the ID if it exists
+          id: assignment?.id ?? uuid(), // Preserve ID if it exists, generate new one if it doesn't
           receipt_item_id: itemId.toString(), // Convert to string for UUID
           user_name: assignment.user_name,
           method: assignment.method,
@@ -540,33 +540,12 @@ const handleSave = async (): Promise<boolean> => {
     );
 
     // Save to Supabase
-    // Separate new assignments (without ID) from existing ones (with ID)
-    const newAssignments = assignmentsToSave
-      .filter((assignment) => !assignment.id)
-      .map((assignment) => ({
-        ...assignment,
-        id: uuid(), // Generate a UUID for new assignments
-      }));
-    const existingAssignments = assignmentsToSave.filter(
-      (assignment) => assignment.id
-    );
-
-    // Insert new assignments
-    if (newAssignments.length > 0) {
-      const { error: insertError } = await supabase
-        .from("receipt_item_assignments")
-        .insert(newAssignments);
-
-      if (insertError) {
-        throw insertError;
-      }
-    }
-
-    // Update existing assignments using upsert with ID
-    if (existingAssignments.length > 0) {
+    // All assignments should now have IDs (generated when created)
+    // Use upsert for all assignments to handle both new and existing ones
+    if (assignmentsToSave.length > 0) {
       const { error: upsertError } = await supabase
         .from("receipt_item_assignments")
-        .upsert(existingAssignments, {
+        .upsert(assignmentsToSave, {
           onConflict: "id",
         });
 
@@ -574,13 +553,6 @@ const handleSave = async (): Promise<boolean> => {
         throw upsertError;
       }
     }
-
-    toast.add({
-      title: "Success",
-      description: "Item saved to form and database",
-      color: "green",
-      icon: "i-heroicons-check-circle",
-    });
 
     emit("close");
     return true;

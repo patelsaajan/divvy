@@ -10,7 +10,7 @@ export const useGetReceipt = (id: string) => {
   } = useAsyncData(`receipt_${id}`, async () => {
     const [receiptResult, itemsResult] = await Promise.all([
       client.from("receipts").select("*").eq("id", id).single(),
-      client.from("receipt_items").select("*").eq("receipt_id", id),
+      client.from("receipt_items").select("*").eq("receipt_id", id).order("created_at", { ascending: false }),
     ]);
 
     return {

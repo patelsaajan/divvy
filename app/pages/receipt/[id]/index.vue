@@ -119,7 +119,7 @@
                   <UAvatarGroup
                     v-if="
                       field.value.assignments &&
-                        field.value.assignments.length > 0
+                      field.value.assignments.length > 0
                     "
                     class="ml-2"
                   >
@@ -144,7 +144,7 @@
                     v-if="!isMobile"
                     variant="ghost"
                     icon="i-heroicons-trash"
-                    @click.stop="remove(idx)"
+                    @click.stop="handleDeleteItem(idx)"
                     class="ml-2 cursor-pointer hover:text-red-500"
                   />
                 </div>
@@ -203,7 +203,7 @@
               icon="i-lucide-plus"
               color="secondary"
               class="flex-1 text-white py-2 rounded text-sm flex items-center justify-center"
-              @click="push({ title: 'New Item', cost: 0 } as ReceiptItemForm)"
+              @click="handleAddItem"
             >
               Add Item
             </UButton>
@@ -345,14 +345,13 @@ const createSwipeHandler = (index: number) => {
       fieldItems.value[index]!.direction = direction;
 
       if (Math.abs(lengthX.value) > 75) {
-
         // Handle actions based on direction
         if (direction === "left") {
-          remove(index);
+          handleDeleteItem(index);
         } else if (direction === "right") {
-          editItem.id         = fields.value[index].value.id;
-          editItem.title      = fields.value[index]?.value.title ?? "";
-          editItem.cost       = fields.value[index]?.value.cost ?? 0.0;
+          editItem.id = fields.value[index].value.id;
+          editItem.title = fields.value[index]?.value.title ?? "";
+          editItem.cost = fields.value[index]?.value.cost ?? 0.0;
           editItem.fieldIndex = index;
           editDrawerOpen.value = true;
         }
@@ -482,12 +481,40 @@ const addMember = (newMember: ReceiptMember) => {
   members.value.push(newMember);
 };
 
-const handleEditItemSave = (
+const handleEditItemSave = async (
   fieldIndex: number,
   updatedItem: ReceiptItemForm
 ) => {
+  // Get the current item to preserve its ID
+  const currentItem = fields.value[fieldIndex];
+  if (!currentItem) return;
+
+  // Preserve the original ID and merge with updated data
+  const itemWithId = {
+    ...updatedItem,
+    id: currentItem.value.id, // Preserve the original ID
+  };
+
   // Update the field array item using the update method
-  update(fieldIndex, updatedItem);
+  update(fieldIndex, itemWithId);
+
+  // Persist the changes to the database using upsert
+  const { error } = await supabase.from("receipt_items").upsert({
+    id: currentItem.value.id,
+    receipt_id: id,
+    title: updatedItem.title,
+    cost: updatedItem.cost,
+  });
+
+  if (error) {
+    toast.add({
+      title: "Error Saving Item",
+      description: `Failed to save item changes: ${error.message}`,
+      color: "red",
+      icon: "i-heroicons-x-circle",
+    });
+    return;
+  }
 };
 
 const assignMembersToItemHandler = (idx: number) => {
@@ -544,6 +571,15 @@ async function fetchReceiptWithItemsAndAssignments() {
       return null;
     }
 
+    // Sort receipt_items by created_at ascending (oldest first)
+    if (data?.receipt_items) {
+      data.receipt_items.sort((a, b) => {
+        const dateA = new Date(a.created_at || 0);
+        const dateB = new Date(b.created_at || 0);
+        return dateA.getTime() - dateB.getTime();
+      });
+    }
+
     return data;
   } catch (error) {
     toast.add({
@@ -556,4 +592,78 @@ async function fetchReceiptWithItemsAndAssignments() {
     return null;
   }
 }
+
+const handleAddItem = async () => {
+  try {
+    // Create the receipt item in the database first
+    const { data: newItem, error } = await supabase
+      .from("receipt_items")
+      .insert({
+        receipt_id: id,
+        title: "New Item",
+        cost: 0,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast.add({
+        title: "Error Adding Item",
+        description: "Failed to create new item. Please try again.",
+        color: "red",
+        icon: "i-heroicons-x-circle",
+      });
+      return;
+    }
+
+    // Add the new item to the form with the database ID
+    push({
+      id: newItem.id,
+      title: newItem.title,
+      cost: newItem.cost,
+      assignments: [],
+    } as ReceiptItemForm);
+  } catch (error) {
+    toast.add({
+      title: "Error Adding Item",
+      description: "An unexpected error occurred while creating the item.",
+      color: "red",
+      icon: "i-heroicons-x-circle",
+    });
+  }
+};
+
+// Custom delete function that removes from both form and database
+const handleDeleteItem = async (index: number) => {
+  const itemToDelete = fields.value[index];
+  if (!itemToDelete) return;
+
+  try {
+    // Delete from database first
+    const { error } = await supabase
+      .from("receipt_items")
+      .delete()
+      .eq("id", itemToDelete.value.id);
+
+    if (error) {
+      toast.add({
+        title: "Error Deleting Item",
+        description: `Failed to delete item from database: ${error.message}`,
+        color: "red",
+        icon: "i-heroicons-x-circle",
+      });
+      return;
+    }
+
+    // Remove from form state
+    remove(index);
+  } catch (error) {
+    toast.add({
+      title: "Error Deleting Item",
+      description: "An unexpected error occurred while deleting the item.",
+      color: "red",
+      icon: "i-heroicons-x-circle",
+    });
+  }
+};
 </script>
