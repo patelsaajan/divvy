@@ -7,7 +7,7 @@ body {
 
 @theme {
   --ui-primary  : #fff;
-  --ui-secondary: #ff7f00;
+  --ui-secondary: var(--color-orange-500);
 }
 
 @utility container {

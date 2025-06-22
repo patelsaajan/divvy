@@ -118,7 +118,7 @@
                   <UAvatarGroup
                     v-if="
                       field.value.assignments &&
-                      field.value.assignments.length > 0
+                        field.value.assignments.length > 0
                     "
                     class="ml-2"
                   >
@@ -191,18 +191,28 @@
           <!-- Receipt Actions -->
           <div class="flex space-x-2 mt-4 px-2">
             <UButton
+              icon="i-lucide-users"
               class="flex-1 bg-gray-700 text-white py-2 rounded text-sm flex items-center justify-center"
               @click="memberDrawerOpen = true"
             >
-              <UIcon name="i-lucide-users" :size="16" class="inline mr-1" />
               <span class="ml-2">Members</span>
             </UButton>
             <UButton
-              class="flex-1 bg-orange-500 text-white py-2 rounded text-sm flex items-center justify-center"
+              icon="i-lucide-plus"
+              color="secondary"
+              class="flex-1 text-white py-2 rounded text-sm flex items-center justify-center"
               @click="push({ title: 'New Item', cost: 0 } as ReceiptItemForm)"
             >
-              <UIcon name="lucide:plus" :size="16" class="inline mr-1" />
               Add Item
+            </UButton>
+          </div>
+          <div class="flex justify-between items-center px-2">
+            <UButton
+              icon="i-lucide-calculator"
+              class="flex-1 py-2 bg-gray-700 text-white rounded text-sm flex items-center justify-center"
+              :to="`/summary/${id}`"
+            >
+              Summary
             </UButton>
           </div>
         </div>
