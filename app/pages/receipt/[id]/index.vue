@@ -85,41 +85,58 @@
               v-for="(field, idx) in fields"
               :name="`items.${idx}.title`"
               :key="field.key"
-              class="flex justify-between items-center py-2 px-3 rounded-lg hover:bg-gray-700/50 cursor-pointer transition-colors"
+              class="relative flex justify-between items-center py-2 px-3 rounded-lg hover:bg-gray-700/50 cursor-pointer transition-colors h-12 overflow-hidden"
               @click="assignMembersToItem(idx)"
             >
-              <div class="flex items-center space-x-2">
-                <div class="font-medium">{{ field.value.title }}</div>
-                <UAvatarGroup
-                  v-if="
-                    field.value.assignments &&
-                    field.value.assignments.length > 0
-                  "
-                  class="ml-2"
-                >
-                  <UAvatar
-                    v-for="assignment in field.value.assignments"
-                    :key="assignment.user_name"
-                    :alt="assignment.user_name"
-                  />
-                </UAvatarGroup>
+              <div
+                class="absolute top-0 left-0 w-1/4 h-full bg-blue-500 flex items-center justify-center z-10 rounded"
+              >
+                <span class="text-white font-medium">Edit</span>
               </div>
-              <div class="flex items-center">
-                <div class="font-medium">
-                  {{
-                    formatCurrency(
-                      field.value.cost || 0,
-                      receipt?.currency,
-                      receipt?.locale
-                    )
-                  }}
+              <div
+                :ref="el => setTargetRef(idx, el as HTMLElement)"
+                :class="{ 'transition-none': fieldItems[idx]?.isSwiping }"
+                :style="{ left: fieldItems[idx]?.left }"
+                class="absolute top-0 left-0 w-full h-full flex items-center justify-between z-20 bg-gray-800"
+              >
+                <div class="flex items-center space-x-2">
+                  <div class="font-medium">{{ field.value.title }}</div>
+                  <UAvatarGroup
+                    v-if="
+                      field.value.assignments &&
+                        field.value.assignments.length > 0
+                    "
+                    class="ml-2"
+                  >
+                    <UAvatar
+                      v-for="assignment in field.value.assignments"
+                      :key="assignment.user_name"
+                      :alt="assignment.user_name"
+                    />
+                  </UAvatarGroup>
                 </div>
-                <UButton
-                  variant="ghost"
-                  icon="i-heroicons-trash"
-                  @click.stop="remove(idx)"
-                  class="ml-2 cursor-pointer hover:text-red-500"
-                />
+                <div class="flex items-center">
+                  <div class="font-medium">
+                    {{
+                      formatCurrency(
+                        field.value.cost || 0,
+                        receipt?.currency,
+                        receipt?.locale
+                      )
+                    }}
+                  </div>
+                  <UButton
+                    variant="ghost"
+                    icon="i-heroicons-trash"
+                    @click.stop="remove(idx)"
+                    class="ml-2 cursor-pointer hover:text-red-500"
+                  />
+                </div>
+              </div>
+              <div
+                class="absolute top-0 right-0 w-1/4 h-full bg-red-500 flex items-center justify-center z-10 rounded"
+              >
+                <span class="text-white font-medium">Delete</span>
               </div>
             </div>
           </div>
@@ -159,7 +176,7 @@
           <div class="flex space-x-2 mt-4 px-2">
             <UButton
               class="flex-1 bg-gray-700 text-white py-2 rounded text-sm flex items-center justify-center"
-              @click="drawerOpen = true"
+              @click="memberDrawerOpen = true"
             >
               <UIcon name="i-lucide-users" :size="16" class="inline mr-1" />
               <span class="ml-2">Members</span>
@@ -175,11 +192,16 @@
         </div>
       </div>
     </div>
-    <MembersDraw
-      :open="drawerOpen"
+    <DrawerMembers
+      :open="memberDrawerOpen"
       :members="members"
-      @close="drawerOpen = false"
+      @close="memberDrawerOpen = false"
       @removeMember="removeMember"
+    />
+    <DrawerEditItem
+      :open="editDrawerOpen"
+      :item="editItem"
+      @close="editDrawerOpen = false"
     />
   </template>
 
@@ -189,6 +211,9 @@
 </template>
 
 <script setup lang="ts">
+import type { UseSwipeDirection } from '@vueuse/core'
+import { useSwipe } from '@vueuse/core'
+import { shallowRef } from 'vue'
 import type { DropdownMenuItem } from "@nuxt/ui";
 import { useFieldArray, useForm } from "vee-validate";
 import type {
@@ -200,9 +225,11 @@ import { formatCurrency } from "~~/utils/currency";
 import { formatDate } from "~~/utils/formatDate";
 
 // Get the route parameter
-const route = useRoute();
-const id = route.params.id;
-const drawerOpen = ref(false);
+const route            = useRoute();
+const id               = route.params.id;
+const memberDrawerOpen = ref(false);
+const editDrawerOpen   = ref(false);
+const editItem         = reactive({ id: 0, title: "", cost: 0.00 });
 
 // Use the composable
 const {
@@ -216,6 +243,85 @@ const { handleSubmit, resetForm, values, setFieldValue } =
   useForm<ReceiptEditForm>({ initialValues: {} });
 
 const { remove, push, fields } = useFieldArray<ReceiptItemForm>("items");
+
+// Store refs for each target
+const targetRefs = shallowRef<(HTMLElement | null)[]>([])
+
+const setTargetRef = (index: number, el: HTMLElement | null) => {
+  targetRefs.value[index] = el
+}
+
+const fieldItems = ref([])
+
+watchEffect(() => {
+  fieldItems.value = Array.from({ length: fields.value.length }, (_, i) => ({
+    id: i + 1,
+    left: '0',
+    direction: null,
+    lengthX: 0,
+    isSwiping: false
+  }))
+
+// Create swipe handlers for each item
+const createSwipeHandler = (index: number) => {
+  const target = computed(() => targetRefs.value[index])
+
+  const { direction, isSwiping, lengthX, stop } = useSwipe(target, {
+    passive: false,
+    onSwipe() {
+      const maxSwipeDistance = 80
+      const clampedLengthX = Math.max(-maxSwipeDistance, Math.min(maxSwipeDistance, lengthX.value))
+      const length = -clampedLengthX
+      fieldItems.value[index]!.left = `${length}px`
+      fieldItems.value[index]!.lengthX = clampedLengthX
+      fieldItems.value[index]!.isSwiping = isSwiping.value
+
+    },
+    onSwipeEnd(e: TouchEvent, direction: UseSwipeDirection) {
+      fieldItems.value[index]!.left = '0'
+      fieldItems.value[index]!.isSwiping = false
+      fieldItems.value[index]!.direction = direction
+
+      if (Math.abs(lengthX.value) > 50) {
+        console.log(`Item ${index + 1} swipe end:`, direction)
+        editItem.id          = fields.value[index]?.id ?? 0;
+        editItem.title       = fields.value[index]?.value.title ?? "";
+        editItem.cost        = fields.value[index]?.value.cost ?? 0.00;
+        editDrawerOpen.value = true;
+
+        // Handle actions based on direction
+        if (direction === 'left') {
+          console.log(`Edit item ${index + 1}`)
+        } else if (direction === 'right') {
+          console.log(`Delete item ${index + 1}`)
+        }
+      }
+    },
+  })
+
+  // Watch for changes and update the item
+  watch(direction, (newDirection) => {
+    fieldItems.value[index]!.direction = newDirection
+  })
+
+  watch(isSwiping, (newIsSwiping) => {
+    fieldItems.value[index]!.isSwiping = newIsSwiping
+  })
+
+  watch(lengthX, (newLengthX) => {
+    fieldItems.value[index]! .lengthX = newLengthX
+  })
+}
+
+// Initialise swipe handlers for all items
+onMounted(() => {
+  fieldItems.value.forEach((_, index) => {
+    createSwipeHandler(index)
+  })
+})
+
+})
+
 
 const totalCost = computed(() => {
   return fields.value
@@ -276,7 +382,7 @@ const createMemberItems = () => {
     label: "Manage Members",
     icon: "i-lucide-user-plus",
     onClick: () => {
-      drawerOpen.value = true;
+      memberDrawerOpen.value = true;
     },
   });
 
