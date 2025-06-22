@@ -21,21 +21,22 @@ export type ReceiptItemSchema = {
 };
 
 export type ReceiptItemAssignmentSchema = {
+  id: string;
   receipt_item_id: string;
   user_name: string;
-  method: "equal" | "share" | "amount";
-  numerator: number;
-  denominator: number;
-  value: number;
-  calculated_amount: number;
+  method: "equal" | "percent" | "amount";
+  numerator: number | null;
+  denominator: number | null;
+  value: number | null;
+  calculated_amount: number | null;
 };
 
 // ---- Form types ----
 
 export type ReceiptItemAssignmentForm = Omit<
   ReceiptItemAssignmentSchema,
-  "receipt_item_id" | "calculated_amount"
->;
+  "receipt_item_id" | "calculated_amount" | "id"
+> & { id?: string };
 
 export type ReceiptItemForm = {
   title: string;

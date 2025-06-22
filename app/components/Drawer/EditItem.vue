@@ -65,14 +65,14 @@
               >
                 <UButton
                   icon="i-lucide-percent"
-                  :variant="splitMethod === 'percentage' ? 'solid' : 'ghost'"
-                  :color="splitMethod === 'percentage' ? 'primary' : 'gray'"
-                  @click="switchSplitMethod('percentage')"
+                  :variant="splitMethod === 'percent' ? 'solid' : 'ghost'"
+                  :color="splitMethod === 'percent' ? 'primary' : 'neutral'"
+                  @click="switchSplitMethod('percent')"
                 />
                 <UButton
                   icon="i-lucide-pound-sterling"
                   :variant="splitMethod === 'amount' ? 'solid' : 'ghost'"
-                  :color="splitMethod === 'amount' ? 'primary' : 'gray'"
+                  :color="splitMethod === 'amount' ? 'primary' : 'neutral'"
                   @click="switchSplitMethod('amount')"
                 />
               </div>
@@ -95,7 +95,7 @@
 
               <!-- Input for Percentage Split -->
               <template
-                v-if="splitMethod === 'percentage'"
+                v-if="splitMethod === 'percent'"
                 :key="assignment.user_name + '-percentage'"
                 class="flex items-center gap-2"
               >
@@ -148,13 +148,13 @@
           </div>
           <div
             v-if="formState.assignments.length > 0"
-            class="mt-3 p-2 rounded-md text-sm transition-colors"
+            class="mt-3 p-2 rounded-md text-sm transition-colors flex justify-between"
             :class="totalValidation.class"
           >
             <span class="font-medium">{{ totalValidation.message }}</span>
             <span class="text-xs ml-2">
               Total:
-              <template v-if="splitMethod === 'percentage'"
+              <template v-if="splitMethod === 'percent'"
                 >{{ (totalAmount * 100).toFixed(0) }}% / 100%</template
               >
               <template v-else
@@ -242,7 +242,7 @@ const formState = ref<ReceiptItemForm>({
   assignments: [],
 });
 
-const splitMethod = ref<"percentage" | "amount">("percentage");
+const splitMethod = ref<"percent" | "amount">("percent");
 
 // --- Lifecycle and Watchers ---
 
@@ -257,18 +257,25 @@ watch(
         JSON.stringify(props.currentAssignments || [])
       );
 
+      // Determine the split method from the first loaded assignment.
       const firstAssignmentMethod = props.currentAssignments?.[0]?.method;
 
-      if (firstAssignmentMethod === "custom") {
-        // If loaded assignments are 'custom', the values are already amounts.
+      // The UI has two modes: 'percent' (for percentages) and 'amount' (for fixed currency).
+      // The data can have 'equal' or 'percent', which both map to the UI's 'percent' mode.
+      if (firstAssignmentMethod === "amount") {
         splitMethod.value = "amount";
       } else {
-        // If 'equal', the values are amounts that need conversion to percentage fractions.
-        splitMethod.value = "percentage";
+        // 'equal' or 'percent' methods are both handled as 'percent' in the UI.
+        splitMethod.value = "percent";
+        // When in percent mode, the 'value' field should represent the percentage for the UI.
         const cost = formState.value.cost;
         if (cost > 0) {
           formState.value.assignments.forEach((a) => {
-            a.value = a.value / cost;
+            // The actual monetary value is now passed in props.currentAssignments.
+            // We convert it to a percentage for the UI.
+            const percentage = (a.value ?? 0) / cost;
+            // Round to 4 decimal places for percentage precision
+            a.value = Math.round(percentage * 10000) / 10000;
           });
         }
       }
@@ -287,10 +294,11 @@ const unassignedMembers = computed(() => {
 function addMember(member: ReceiptMember) {
   formState.value.assignments.push({
     user_name: member.name,
-    method: splitMethod.value === "percentage" ? "equal" : "custom",
+    // The method is determined by the current UI mode.
+    method: splitMethod.value,
     value: 0,
-    numerator: 1,
-    denominator: 1,
+    numerator: null,
+    denominator: null,
   });
   splitEvenly();
 }
@@ -304,17 +312,28 @@ function removeMember(userName: string) {
 
 // --- Calculation Logic ---
 
-function switchSplitMethod(
-  method: "percentage" | "amount",
-  convertValues = true
-) {
+function switchSplitMethod(method: "percent" | "amount", convertValues = true) {
+  // If already on the same method, don't do anything
+  if (splitMethod.value === method) {
+    return;
+  }
+
   const cost = formState.value.cost;
   if (convertValues && cost > 0) {
     formState.value.assignments.forEach((a) => {
-      if (method === "percentage") {
-        a.value = a.value / cost;
+      // When switching, convert the value to the new method's representation.
+      if (method === "percent") {
+        // From amount to percentage
+        const percentage = (a.value ?? 0) / cost;
+        // Round to 4 decimal places for percentage precision
+        a.value = Math.round(percentage * 10000) / 10000;
+        a.method = "percent";
       } else {
-        a.value = a.value * cost;
+        // From percentage to amount
+        const amount = (a.value ?? 0) * cost;
+        // Round to 2 decimal places for currency precision
+        a.value = Math.round(amount * 100) / 100;
+        a.method = "amount";
       }
     });
   }
@@ -325,10 +344,20 @@ function splitEvenly() {
   const numAssignments = formState.value.assignments.length;
   if (numAssignments === 0) return;
 
-  if (splitMethod.value === "percentage") {
-    const distributedPercentages = distributePercentageEvenly(numAssignments);
+  if (splitMethod.value === "percent") {
+    // For percent mode, split the currency amount evenly first, then calculate percentages
+    const distributedAmounts = distributeAmountEvenly(
+      formState.value.cost,
+      numAssignments
+    );
     formState.value.assignments.forEach((assignment, index) => {
-      assignment.value = distributedPercentages[index] || 0;
+      const amount = distributedAmounts[index] || 0;
+      // Calculate percentage from the distributed amount
+      const percentage =
+        formState.value.cost > 0 ? amount / formState.value.cost : 0;
+      // Round to 4 decimal places for percentage precision
+      assignment.value = Math.round(percentage * 10000) / 10000;
+      assignment.method = "percent";
     });
   } else {
     const distributedAmounts = distributeAmountEvenly(
@@ -337,6 +366,7 @@ function splitEvenly() {
     );
     formState.value.assignments.forEach((assignment, index) => {
       assignment.value = distributedAmounts[index] || 0;
+      assignment.method = "amount";
     });
   }
 }
@@ -350,10 +380,12 @@ function onAmountChange(
     .filter((a) => a.user_name !== assignmentToUpdate.user_name)
     .reduce((sum, current) => sum + (current.value || 0), 0);
 
-  const limit = splitMethod.value === "percentage" ? 1 : formState.value.cost;
+  const limit = splitMethod.value === "percent" ? 1 : formState.value.cost;
   const maxNewValue = limit - otherAssignmentsSum;
 
-  assignmentToUpdate.value = Math.min(value, maxNewValue < 0 ? 0 : maxNewValue);
+  // Round to 2 decimal places to prevent floating point precision issues
+  const finalValue = Math.min(value, maxNewValue < 0 ? 0 : maxNewValue);
+  assignmentToUpdate.value = Math.round(finalValue * 100) / 100;
 }
 
 // --- Validation ---
@@ -370,7 +402,7 @@ const totalValidation = computed(() => {
   const cost = formState.value.cost;
   const Epsilon = 0.0001;
 
-  if (splitMethod.value === "percentage") {
+  if (splitMethod.value === "percent") {
     if (Math.abs(total - 1) < Epsilon)
       return {
         class: "bg-green-100 dark:bg-green-900/50",
@@ -425,7 +457,7 @@ const handleSave = async (): Promise<boolean> => {
   let isValid = true;
   let errorMessage = "";
 
-  if (splitMethod.value === "percentage" && Math.abs(total - 1) > 0.01) {
+  if (splitMethod.value === "percent" && Math.abs(total - 1) > 0.01) {
     isValid = false;
     errorMessage = "Total percentage must be exactly 100%.";
   } else if (splitMethod.value === "amount" && Math.abs(total - cost) > 0.01) {
@@ -443,15 +475,27 @@ const handleSave = async (): Promise<boolean> => {
     return false;
   }
 
-  // Set method for persistence
-  formState.value.assignments.forEach((a) => {
-    a.method = splitMethod.value === "percentage" ? "equal" : "custom";
-  });
+  // Create a deep copy to work with, ensuring the drawer's state isn't mutated prematurely.
+  const itemToSave = JSON.parse(JSON.stringify(formState.value));
+
+  // The big simplification: The data is now stored in a consistent format that
+  // mirrors the database schema. When the UI is in 'percent' (percentage) mode,
+  // we just need to convert the percentage value back to a currency amount before saving.
+  if (splitMethod.value === "percent") {
+    itemToSave.assignments.forEach((a: ReceiptItemAssignmentForm) => {
+      // The method is already 'percent', we just convert the UI value (percentage)
+      // back to the final currency amount for storage.
+      const calculatedAmount = (a.value ?? 0) * itemToSave.cost;
+      // Round to 2 decimal places to prevent floating point precision issues
+      a.value = Math.round(calculatedAmount * 100) / 100;
+      // We could also set numerator/denominator here for the backend if needed.
+    });
+  }
+  // No 'else' block needed. If the method is 'amount', the value is already a currency amount.
 
   isSaving.value = true;
   try {
-    // By creating a deep copy, we break the reactive link.
-    const itemToSave = JSON.parse(JSON.stringify(formState.value));
+    // The emitted data now has a consistent structure.
     emit("save", props.fieldIndex, itemToSave);
     emit("close");
     return true;
