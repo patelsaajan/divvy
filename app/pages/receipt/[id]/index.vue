@@ -33,7 +33,7 @@
               <UAvatar
                 v-for="member in members"
                 v-show="member.checked"
-                :key="member.name"
+                :key="member.id"
                 :alt="member.name"
               />
             </UAvatarGroup>
@@ -82,9 +82,25 @@
               v-for="(field, idx) in fields"
               :name="`items.${idx}.title`"
               :key="field.key"
-              class="flex justify-between items-center py-2"
+              class="flex justify-between items-center py-2 px-3 rounded-lg hover:bg-gray-700/50 cursor-pointer transition-colors"
+              @click="assignMembersToItem(idx)"
             >
-              <div class="font-medium">{{ field.value.title }}</div>
+              <div class="flex items-center space-x-2">
+                <div class="font-medium">{{ field.value.title }}</div>
+                <UAvatarGroup
+                  v-if="
+                    field.value.assignments &&
+                    field.value.assignments.length > 0
+                  "
+                  class="ml-2"
+                >
+                  <UAvatar
+                    v-for="assignment in field.value.assignments"
+                    :key="assignment.user_name"
+                    :alt="assignment.user_name"
+                  />
+                </UAvatarGroup>
+              </div>
               <div class="flex items-center">
                 <div class="font-medium">
                   ${{ field.value.cost ? field.value.cost.toFixed(2) : 0 }}
@@ -92,7 +108,7 @@
                 <UButton
                   variant="ghost"
                   icon="i-lucide-trash"
-                  @click="remove(idx)"
+                  @click.stop="remove(idx)"
                   class="ml-2 cursor-pointer hover:text-red-500"
                 />
               </div>
@@ -101,7 +117,7 @@
 
           <!-- Calculate total cost as a sanity check -->
           <div class="border-t border-b border-gray-700 py-6">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between mx-4">
               <div class="font-medium text-gray-300">Total</div>
               <div class="flex items-center">
                 <div class="font-medium">${{ totalCost }}</div>
@@ -124,17 +140,17 @@
 
           <!-- Receipt Actions -->
           <div class="flex space-x-2 mt-3 pt-3">
-            <NuxtLink
-              to="/receipt/1/people"
+            <UButton
               class="flex-1 bg-gray-700 text-white py-2 rounded text-sm flex items-center justify-center"
+              @click="drawerOpen = true"
             >
               <UIcon
                 name="i-heroicons-user-group"
                 :size="16"
                 class="inline mr-1"
               />
-              <span class="ml-2">People</span>
-            </NuxtLink>
+              <span class="ml-2">Members</span>
+            </UButton>
             <UButton
               class="flex-1 bg-orange-500 text-white py-2 rounded text-sm flex items-center justify-center"
               @click="push({ title: 'New Item', cost: 0 } as ReceiptItemForm)"
@@ -146,6 +162,79 @@
         </div>
       </div>
     </div>
+
+    <!-- Members Drawer -->
+    <UDrawer
+      v-model:open="drawerOpen"
+      should-scale-background
+      set-background-color-on-scale
+    >
+      <template #header>
+        <div class="flex items-center justify-between">
+          <h3
+            class="text-base font-semibold leading-6 text-gray-900 dark:text-white"
+          >
+            Members
+          </h3>
+          <UButton
+            color="neutral"
+            variant="ghost"
+            icon="i-heroicons-x-mark-20-solid"
+            class="-my-1"
+            @click="drawerOpen = false"
+          />
+        </div>
+      </template>
+
+      <template #body>
+        <!-- Members -->
+        <div class="space-y-4 min-h-[75vh]">
+          <div
+            v-for="person in members"
+            :key="person.id"
+            class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+          >
+            <div class="flex items-center space-x-3">
+              <UAvatar :alt="person.name" />
+              <div>
+                <p class="font-medium text-gray-900 dark:text-white">
+                  {{ person.name }}
+                </p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  ${{ person.amount.toFixed(2) }}
+                </p>
+              </div>
+            </div>
+            <UButton
+              variant="ghost"
+              color="error"
+              icon="i-heroicons-trash"
+              @click="removeMember(person.id)"
+            />
+          </div>
+
+          <!-- Add new member form -->
+          <div
+            class="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700"
+          >
+            <UInput
+              v-model="newPerson"
+              placeholder="Enter a name"
+              class="flex-1"
+              @keyup.enter="addPerson"
+            />
+            <UButton
+              color="primary"
+              icon="i-heroicons-plus"
+              @click="addPerson"
+              :disabled="!newPerson.trim()"
+            >
+              Add
+            </UButton>
+          </div>
+        </div>
+      </template>
+    </UDrawer>
   </template>
 
   <template v-else-if="loading">
@@ -156,7 +245,11 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from "@nuxt/ui";
 import { useFieldArray, useForm } from "vee-validate";
-import type { ReceiptEditForm, ReceiptItemForm } from "~~/types/receipts";
+import type {
+  ReceiptEditForm,
+  ReceiptItemForm,
+  ReceiptMember,
+} from "~~/types/receipts";
 import { formatDate } from "~~/utils/formatDate";
 
 // Get the route parameter
@@ -170,11 +263,6 @@ const {
   status: receiptStatus,
   loading,
 } = useGetReceipt(id as string);
-
-const members = ref([
-  { name: "John Doe", checked: true },
-  { name: "Jane Doe", checked: false },
-]);
 
 const { handleSubmit, resetForm, values, setFieldValue } =
   useForm<ReceiptEditForm>({ initialValues: {} });
@@ -226,6 +314,9 @@ const createMemberItems = () => {
       onUpdateChecked(checked: boolean) {
         member.checked = checked;
       },
+      onSelect(e: Event) {
+        e.preventDefault();
+      },
     })) as DropdownMenuItem[])
   );
 
@@ -234,14 +325,104 @@ const createMemberItems = () => {
   }
 
   items.push({
-    label: "Add Member",
+    label: "Manage Members",
     icon: "i-lucide-user-plus",
-    type: "link",
-    to: "/receipt/1/people",
+    onClick: () => {
+      drawerOpen.value = true;
+    },
   });
 
   return items;
 };
 
 const memberItems = computed(createMemberItems);
+
+const drawerOpen = ref(false);
+
+const newPerson = ref("");
+
+const members = ref<ReceiptMember[]>([
+  { id: 1, name: "John Doe", amount: 100, checked: false },
+  { id: 2, name: "Jane Smith", amount: 200, checked: false },
+  { id: 3, name: "Bob Johnson", amount: 150, checked: false },
+]);
+
+const addPerson = () => {
+  if (!newPerson.value.trim()) return;
+
+  const newMember: ReceiptMember = {
+    id: Date.now(),
+    name: newPerson.value.trim(),
+    amount: 0,
+    checked: false,
+  };
+
+  members.value.push(newMember);
+  newPerson.value = "";
+};
+
+const removeMember = (id: number) => {
+  members.value = members.value.filter((member) => member.id !== id);
+};
+
+const assignMembersToItem = (idx: number) => {
+  // Get all selected members
+  const selectedMembers = members.value.filter((member) => member.checked);
+
+  if (selectedMembers.length === 0) {
+    console.log("No members selected");
+    return;
+  }
+
+  // Get the current item
+  const currentItem = fields.value[idx];
+  if (!currentItem) return;
+
+  // Get current assignments
+  const currentAssignments = currentItem.value.assignments || [];
+  const currentAssignedNames = currentAssignments.map((a) => a.user_name);
+
+  // Create new assignments by toggling selected members
+  let newAssignments = [...currentAssignments];
+
+  selectedMembers.forEach((member) => {
+    const isCurrentlyAssigned = currentAssignedNames.includes(member.name);
+
+    if (isCurrentlyAssigned) {
+      // Remove member from assignments
+      newAssignments = newAssignments.filter(
+        (a) => a.user_name !== member.name
+      );
+    } else {
+      // Add member to assignments
+      const newAssignment = {
+        user_name: member.name,
+        method: "equal" as const,
+        numerator: 1,
+        denominator: newAssignments.length + 1, // Will be updated after all additions
+        value: 0,
+      };
+      newAssignments.push(newAssignment);
+    }
+  });
+
+  // Update denominators for equal distribution
+  if (newAssignments.length > 0) {
+    newAssignments = newAssignments.map((assignment) => ({
+      ...assignment,
+      denominator: newAssignments.length,
+    }));
+  }
+
+  // Update the item's assignments by updating the entire field
+  const updatedItem = {
+    ...currentItem.value,
+    assignments: newAssignments,
+  };
+
+  // Use the field array's update method
+  if (fields.value[idx]) {
+    fields.value[idx].value = updatedItem;
+  }
+};
 </script>

@@ -45,3 +45,12 @@ export type ReceiptItemForm = {
 export type ReceiptEditForm = {
   items: ReceiptItemForm[];
 };
+
+// ---- Component types ----
+
+export type ReceiptMember = {
+  id: number;
+  name: string;
+  amount: number;
+  checked: boolean;
+};
