@@ -1,6 +1,6 @@
 <template>
 
-  <template v-if="receiptStatus === 'success' && itemsStatus === 'success'">
+  <template v-if="receiptStatus === 'success'">
   <div class="container mx-auto mt-6">
     <div class="flex items-center mb-6">
       <UButton variant="link" color="secondary" class="p-2 mr-2 cursor-pointer" @click="navigateTo('/')">
@@ -92,7 +92,7 @@
   </div>
 </template>
 
-  <template v-else>
+  <template v-else-if="loading">
     <Loading />
   </template> 
 </template>
@@ -103,21 +103,12 @@ import { useForm, useFieldArray } from 'vee-validate'
 
 // Get the route parameter
 const route = useRoute()
-const id    = route.params.id
+const id = route.params.id
 
-const client = useSupabaseClient()
+// Use the composable
+const { receipt, receiptItems, status: receiptStatus, loading } = useGetReceipt(id as string)
 
 const members = ref([{name: 'John Doe', checked: true}, {name: 'Jane Doe', checked: false}])
-
-const { data: receiptItems, status: itemsStatus } = useAsyncData('receipt_items', async () => {
-  const { data, error } = await client.from('receipt_items').select('*').eq('receipt_id', id)
-  return data ?? []
-})
-
-const { data: receipt, status: receiptStatus } = useAsyncData('receipt', async () => {
-  const { data, error } = await client.from('receipts').select('*').eq('id', id).single()
-  return data ?? []
-})
 
 const { handleSubmit, resetForm, values, setFieldValue } = useForm<ReceiptEditForm>({ initialValues: { items: null }})
 
@@ -128,8 +119,8 @@ const totalCost = computed(() => {
 })
 
 // Reset form when receipt items are successfully loaded
-watch([itemsStatus, receiptItems], () => {
-  if (itemsStatus.value === 'success' && receiptItems.value && !values.items) {
+watch([receiptStatus, receiptItems], () => {
+  if (receiptStatus.value === 'success' && receiptItems.value && !values.items) {
     resetForm({ values: { items: receiptItems.value } })
   }
 }, { immediate: true })
