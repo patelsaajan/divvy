@@ -24,7 +24,7 @@
               <div>
                 <h3 class="font-medium">{{ receipt.vendor ?? "Unknown" }}</h3>
                 <span class="text-xs text-gray-400">{{
-                  receipt.uploaded_at
+                  formatDate(receipt.uploaded_at)
                 }}</span>
               </div>
             </div>
@@ -55,6 +55,7 @@
 
 <script setup>
 import { paths } from "~~/utils/paths";
+import { formatDate } from "~~/utils/formatDate";
 
-const { receipts, loading, error, fetchItems } = useReceipts();
+const { receipts, loading, error, refresh } = useReceipts();
 </script>

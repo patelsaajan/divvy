@@ -59,9 +59,9 @@
             <div class="flex items-center">
               <div>
                 <h4 class="font-medium">{{ receipt?.vendor ?? "Unknown" }}</h4>
-                <span class="text-xs text-gray-400">{{
-                  formatDate(receipt?.uploaded_at ?? "") ?? "Unknown"
-                }}</span>
+                <span class="text-xs text-gray-400">
+                  {{ formatDate(receipt?.uploaded_at ?? "") }}
+                </span>
               </div>
             </div>
             <div class="text-right">
@@ -157,6 +157,7 @@
 import type { DropdownMenuItem } from "@nuxt/ui";
 import { useFieldArray, useForm } from "vee-validate";
 import type { ReceiptEditForm, ReceiptItemForm } from "~~/types/receipts";
+import { formatDate } from "~~/utils/formatDate";
 
 // Get the route parameter
 const route = useRoute();
@@ -200,14 +201,6 @@ watch(
   },
   { immediate: true }
 );
-
-function formatDate(date: string) {
-  return new Date(date).toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 const createMemberItems = () => {
   const items: DropdownMenuItem[] = [
