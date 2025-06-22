@@ -103,6 +103,7 @@
               >
                 <div class="flex items-center space-x-2">
                   <UButton
+                    v-if="!isMobile"
                     variant="ghost"
                     icon="lucide:edit"
                     @click.stop="
@@ -118,7 +119,7 @@
                   <UAvatarGroup
                     v-if="
                       field.value.assignments &&
-                      field.value.assignments.length > 0
+                        field.value.assignments.length > 0
                     "
                     class="ml-2"
                   >
@@ -140,6 +141,7 @@
                     }}
                   </div>
                   <UButton
+                    v-if="!isMobile"
                     variant="ghost"
                     icon="i-heroicons-trash"
                     @click.stop="remove(idx)"
@@ -272,6 +274,8 @@ const memberDrawerOpen = ref(false);
 const editDrawerOpen = ref(false);
 const editItem = reactive({ id: 0, title: "", cost: 0.0, fieldIndex: 0 });
 
+const { isMobile } = useDevice();
+
 // Use the composable
 const {
   receipt,
@@ -341,17 +345,16 @@ const createSwipeHandler = (index: number) => {
       fieldItems.value[index]!.direction = direction;
 
       if (Math.abs(lengthX.value) > 75) {
-        editItem.id = fields.value[index].value.id;
-        editItem.title = fields.value[index]?.value.title ?? "";
-        editItem.cost = fields.value[index]?.value.cost ?? 0.0;
-        editItem.fieldIndex = index;
-        editDrawerOpen.value = true;
 
         // Handle actions based on direction
         if (direction === "left") {
-          console.log(`Edit item ${index + 1}`);
+          remove(index);
         } else if (direction === "right") {
-          console.log(`Delete item ${index + 1}`);
+          editItem.id         = fields.value[index].value.id;
+          editItem.title      = fields.value[index]?.value.title ?? "";
+          editItem.cost       = fields.value[index]?.value.cost ?? 0.0;
+          editItem.fieldIndex = index;
+          editDrawerOpen.value = true;
         }
       }
     },

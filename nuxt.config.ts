@@ -30,5 +30,6 @@ export default defineNuxtConfig({
     "@nuxt/image",
     "@nuxt/ui",
     "@nuxtjs/supabase",
+    "@nuxtjs/device",
   ],
 });
