@@ -1,12 +1,7 @@
 <template>
-  <div class="px-4 py-6">
-    <div class="flex items-center mb-6">
-      <button class="p-2 mr-2" @click="$router.back()">
-        <UIcon name="i-heroicons-chevron-left" :size="24" />
-      </button>
-      <h1 class="text-xl font-semibold">Settings</h1>
-    </div>
+  <PageHeader title="Settings" />
 
+  <div class="px-4">
     <div class="space-y-6">
       <div v-for="(group, index) in settingsGroups" :key="index">
         <h2 class="text-sm text-gray-400 mb-2">{{ group.title }}</h2>

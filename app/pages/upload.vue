@@ -1,18 +1,13 @@
 <template>
-  <div class="px-4 py-6">
-    <div class="flex items-center mb-6">
-      <UButton variant="ghost" class="p-2 mr-2" @click="navigateTo('/')">
-        <UIcon name="i-heroicons-chevron-left" :size="24" />
-        <h1 class="text-xl font-semibold">Receipts</h1>
-      </UButton>
-    </div>
+  <PageHeader title="Upload Receipt" />
 
+  <div class="px-4">
     <div
       v-if="!previewUrl"
-      class="flex flex-col items-center justify-center h-96"
+      class="flex flex-col items-center justify-center h-[75vh]"
     >
       <div
-        class="border-2 border-dashed border-gray-600 rounded-lg p-8 w-full max-w-sm flex flex-col items-center"
+        class="border-2 border-dashed border-gray-600 rounded-lg p-8 w-full max-w-lg flex flex-col items-center justify-center h-1/2"
       >
         <UIcon
           name="i-heroicons-camera"

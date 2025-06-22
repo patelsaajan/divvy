@@ -1,13 +1,14 @@
 <template>
   <template v-if="!loading">
-    <div class="px-4 py-6">
-      <div class="flex justify-between items-center mb-8 mt-4">
-        <h1 class="font-semibold text-2xl">Your Receipts</h1>
+    <PageHeader title="Your Receipts">
+      <template #action>
         <UButton :to="paths.upload" variant="ghost">
           <UIcon name="i-lucide-plus" :size="20" />
         </UButton>
-      </div>
+      </template>
+    </PageHeader>
 
+    <div class="px-4">
       <div class="space-y-3">
         <div
           v-for="receipt in receipts"

@@ -1,5 +1,7 @@
 <template>
-  <nav class="sticky mt-6 bottom-0 left-0 right-0 bg-gray-800 py-2 px-4">
+  <nav
+    class="fixed mt-6 bottom-0 left-0 right-0 bg-gray-800/80 backdrop-blur-lg py-2 px-4 border-t border-gray-700/50"
+  >
     <div class="flex justify-around items-center">
       <NuxtLink
         :to="paths.home"
@@ -7,7 +9,7 @@
         active-class="text-orange-500"
       >
         <ReceiptIcon :size="24" />
-        <span class="text-xs mt-1">Expenses</span>
+        <span class="text-xs mt-1">Receipts</span>
       </NuxtLink>
 
       <NuxtLink

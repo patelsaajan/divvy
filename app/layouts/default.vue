@@ -1,5 +1,5 @@
 <template>
-  <div class="relative h-screen">
+  <div class="relative min-h-screen pb-20">
     <slot />
     <LayoutNavigation />
   </div>
