@@ -6,31 +6,44 @@
         <h1 class="text-xl font-semibold">Receipts</h1>
       </UButton>
     </div>
-    
-    <div v-if="!previewUrl" class="flex flex-col items-center justify-center h-96">
-      <div class="border-2 border-dashed border-gray-600 rounded-lg p-8 w-full max-w-sm flex flex-col items-center">
-        <UIcon name="i-heroicons-camera" :size="48" class="text-gray-500 mb-4" />
+
+    <div
+      v-if="!previewUrl"
+      class="flex flex-col items-center justify-center h-96"
+    >
+      <div
+        class="border-2 border-dashed border-gray-600 rounded-lg p-8 w-full max-w-sm flex flex-col items-center"
+      >
+        <UIcon
+          name="i-heroicons-camera"
+          :size="48"
+          class="text-gray-500 mb-4"
+        />
         <p class="text-center mb-4 text-gray-400">
           Take a photo or upload an image of your receipt
         </p>
         <div class="flex space-x-4">
-          <label class="px-4 py-2 bg-orange-500 text-white rounded-md cursor-pointer">
+          <label
+            class="px-4 py-2 bg-orange-500 text-white rounded-md cursor-pointer"
+          >
             Take Photo
-            <UInput 
-              type="file" 
-              accept="image/*" 
-              capture="environment" 
-              class="hidden" 
-              @change="onFileChange" 
+            <UInput
+              type="file"
+              accept="image/*"
+              capture="environment"
+              class="hidden"
+              @change="onFileChange"
             />
           </label>
-          <label class="px-4 py-2 bg-gray-700 text-white rounded-md cursor-pointer">
+          <label
+            class="px-4 py-2 bg-gray-700 text-white rounded-md cursor-pointer"
+          >
             Upload
-            <UInput 
-              type="file" 
-              accept="image/*" 
-              class="hidden" 
-              @change="onFileChange" 
+            <UInput
+              type="file"
+              accept="image/*"
+              class="hidden"
+              @change="onFileChange"
             />
           </label>
         </div>
@@ -38,26 +51,34 @@
     </div>
 
     <div v-if="previewUrl" class="mt-8 flex flex-col items-center">
-      <img :src="previewUrl" alt="Receipt Preview" class="w-full max-w-xs rounded-lg" />
+      <img
+        :src="previewUrl"
+        alt="Receipt Preview"
+        class="w-full max-w-xs rounded-lg"
+      />
       <div class="flex space-x-4 mt-4">
-        <label class="px-4 py-2 bg-orange-500 text-white rounded-md cursor-pointer">
-            Change
-            <UInput 
-              type="file" 
-              accept="image/*" 
-              capture="environment" 
-              class="hidden" 
-              @change="onFileChange" 
-            />
-          </label>
+        <label
+          class="px-4 py-2 bg-orange-500 text-white rounded-md cursor-pointer"
+        >
+          Change
+          <UInput
+            type="file"
+            accept="image/*"
+            capture="environment"
+            class="hidden"
+            @change="onFileChange"
+          />
+        </label>
         <UButton variant="ghost" @click="handleUpload">Submit</UButton>
       </div>
     </div>
-    
+
     <div v-if="isUploading" class="mt-8 flex flex-col items-center">
       <div class="w-full max-w-xs bg-gray-800 rounded-lg p-4">
         <div class="flex items-center mb-2">
-          <div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center mr-3">
+          <div
+            class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center mr-3"
+          >
             <UIcon name="i-heroicons-camera" :size="16" class="text-white" />
           </div>
           <span>Uploading...</span>
@@ -71,33 +92,33 @@
 </template>
 
 <script setup>
-import { endpoints } from '~~/utils/endpoints'
+import { endpoints } from "~~/utils/endpoints";
 
-const isUploading = ref(false)
-const file        = ref(null)
-const previewUrl  = ref(null)
+const isUploading = ref(false);
+const file = ref(null);
+const previewUrl = ref(null);
 
 const onFileChange = (e) => {
-  file.value = e.target.files[0]
-  previewUrl.value = URL.createObjectURL(file.value)
-}
+  file.value = e.target.files[0];
+  previewUrl.value = URL.createObjectURL(file.value);
+};
 
 const handleUpload = async (e) => {
-  e.preventDefault()
-  isUploading.value = true 
-  const formData = new FormData()
-  formData.append('file', file.value)
+  e.preventDefault();
+  isUploading.value = true;
+  const formData = new FormData();
+  formData.append("file", file.value);
   const response = await fetch(endpoints.receipt.process, {
-    method: 'POST',
-    body: formData
-  })
+    method: "POST",
+    body: formData,
+  });
 
   if (response.ok) {
-    const data = await response.json()
-    isUploading.value = false
-    navigateTo('/receipt/new')
+    const data = await response.json();
+    isUploading.value = false;
+    navigateTo("/receipt/new");
   } else {
-    console.error('Failed to upload receipt')
+    console.error("Failed to upload receipt");
   }
-}
-</script> 
+};
+</script>
