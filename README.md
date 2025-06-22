@@ -32,3 +32,4 @@ pnpm dev
 - [ ] Take a picture of the receipt through the app
 - [ ] Loading states and error handling across the app
 - [ ] Filter / sort receipts by date, amount, locale, etc.
+- [ ] Allow users to edit the title, vendor, and amount of a receipt
