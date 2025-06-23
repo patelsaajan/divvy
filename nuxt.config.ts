@@ -24,11 +24,9 @@ export default defineNuxtConfig({
     redirect: false,
   },
 
-  modules: [
-    "@nuxt/icon",
-    "@nuxt/ui",
-    "@nuxtjs/supabase",
-    "@nuxtjs/device",
-    "@nuxthub/core",
-  ],
+  modules: ["@nuxt/icon", "@nuxt/ui", "@nuxtjs/supabase", "@nuxtjs/device"],
+
+  nitro: {
+    preset: "vercel",
+  },
 });
