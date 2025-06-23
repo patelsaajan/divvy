@@ -24,11 +24,5 @@ export default defineNuxtConfig({
     redirect: false,
   },
 
-  modules: [
-    "@nuxt/icon",
-    "@nuxt/image",
-    "@nuxt/ui",
-    "@nuxtjs/supabase",
-    "@nuxtjs/device",
-  ],
+  modules: ["@nuxt/icon", "@nuxt/ui", "@nuxtjs/supabase", "@nuxtjs/device"],
 });
