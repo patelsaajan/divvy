@@ -6,7 +6,7 @@ body {
 }
 
 @theme {
-  --ui-primary  : #fff;
+  --ui-primary: #fff;
   --ui-secondary: var(--color-orange-500);
 }
 

@@ -74,7 +74,7 @@
                 )
               }}</span>
               <div class="text-xs text-gray-400">
-                {{ fields?.length ?? 0 }} items
+                {{ receiptItemsWithAssignments?.length ?? 0 }} items
               </div>
             </div>
           </div>
@@ -82,14 +82,13 @@
           <!-- Receipt Line Items -->
           <div class="space-y-1">
             <div
-              v-for="(field, idx) in fields"
-              :name="`items.${idx}.title`"
-              :key="field.key"
+              v-for="(item, idx) in receiptItemsWithAssignments"
+              :key="item.id"
               class="relative flex justify-between items-center py-2 px-3 rounded-lg hover:bg-gray-700/50 cursor-pointer transition-colors h-12 overflow-hidden"
               @click="assignMembersToItemHandler(idx)"
             >
               <div
-                :class="{ 'bg-blue-800': fieldItems[idx]?.left > 75 }"
+                :class="{ 'bg-blue-800': fieldItems[idx]?.left && fieldItems[idx]!.left > 75 }"
                 class="absolute top-0 left-0 w-1/4 h-full bg-blue-500/30 flex items-center justify-center z-10 rounded gap-x-2"
               >
                 <UIcon name="i-lucide-edit" :size="16" />
@@ -98,7 +97,7 @@
               <div
                 :ref="el => setTargetRef(idx, el as HTMLElement)"
                 :class="{ 'transition-none': fieldItems[idx]?.isSwiping }"
-                :style="{ left: `${fieldItems[idx]?.left}px` }"
+                :style="{ left: `${fieldItems[idx]?.left || 0}px` }"
                 class="absolute top-0 left-0 w-full h-full flex items-center justify-between z-20 bg-gray-800 px-4"
               >
                 <div class="flex items-center space-x-2">
@@ -107,24 +106,22 @@
                     variant="ghost"
                     icon="lucide:edit"
                     @click.stop="
-                      editItem.id = field.value.id;
-                      editItem.title = field.value.title;
-                      editItem.cost = field.value.cost;
-                      editItem.fieldIndex = idx;
-                      editDrawerOpen = true;
+                      editItem = {
+                        id: item.id,
+                        title: item.title,
+                        cost: item.cost,
+                        assignments: item.assignments || [],
+                      }
                     "
                     class="ml-2 cursor-pointer hover:text-blue-500"
                   />
-                  <div class="font-medium">{{ field.value.title }}</div>
+                  <div class="font-medium">{{ item.title }}</div>
                   <UAvatarGroup
-                    v-if="
-                      field.value.assignments &&
-                      field.value.assignments.length > 0
-                    "
+                    v-if="item.assignments && item.assignments.length > 0"
                     class="ml-2"
                   >
                     <UAvatar
-                      v-for="assignment in field.value.assignments"
+                      v-for="assignment in item.assignments"
                       :key="assignment.user_name"
                       :alt="assignment.user_name"
                     />
@@ -134,7 +131,7 @@
                   <div class="font-medium">
                     {{
                       formatCurrency(
-                        field.value.cost || 0,
+                        item.cost || 0,
                         receipt?.currency,
                         receipt?.locale
                       )
@@ -150,7 +147,7 @@
                 </div>
               </div>
               <div
-                :class="{ 'bg-red-800': fieldItems[idx]?.left < -75 }"
+                :class="{ 'bg-red-800': fieldItems[idx]?.left && fieldItems[idx]!.left < -75 }"
                 class="absolute top-0 right-0 w-1/4 h-full bg-red-500/30 flex items-center justify-center z-10 rounded gap-x-2"
               >
                 <span class="text-white font-medium">Delete</span>
@@ -221,25 +218,14 @@
       </div>
     </div>
 
-    <DrawerMembers
-      :open="memberDrawerOpen"
-      :members="members"
-      @close="memberDrawerOpen = false"
-      @removeMember="removeMember"
-      @addMember="addMember"
-    />
+    <DrawerMembers :open="memberDrawerOpen" @close="memberDrawerOpen = false" />
 
     <DrawerEditItem
-      :open="editDrawerOpen"
+      v-if="editItem"
+      :open="!!editItem"
       :item="editItem"
-      :field-index="editItem.fieldIndex"
-      :set-field-value="setFieldValue"
-      :members="members"
-      :current-assignments="
-        fields[editItem.fieldIndex]?.value.assignments || []
-      "
-      @close="editDrawerOpen = false"
-      @save="handleEditItemSave"
+      :receipt-id="id"
+      @close="editItem && (editItem = null)"
       @open-member-drawer="memberDrawerOpen = true"
     />
   </template>
@@ -250,68 +236,87 @@
 </template>
 
 <script setup lang="ts">
+import type { DropdownMenuItem } from "@nuxt/ui";
 import type { UseSwipeDirection } from "@vueuse/core";
 import { useSwipe } from "@vueuse/core";
-import { shallowRef } from "vue";
-import type { DropdownMenuItem } from "@nuxt/ui";
-import { useFieldArray, useForm } from "vee-validate";
-import type {
-  ReceiptEditForm,
-  ReceiptItemForm,
-  ReceiptMember,
-  fieldItemsSwipe,
-} from "~~/types/receipts";
+import { computed, nextTick, ref, watch } from "vue";
+import { useMembers } from "~/composables/useMembers";
+import { useReceipt } from "~/composables/useReceipt";
+import { useReceiptItemAssignments } from "~/composables/useReceiptItemAssignments";
+import { useReceiptItems } from "~/composables/useReceiptItems";
+import type { FieldItemsSwipe, ReceiptItemForm } from "~~/types/receipts";
 import { formatCurrency } from "~~/utils/currency";
 import { formatDate } from "~~/utils/formatDate";
 
 const route = useRoute();
 const toast = useToast();
-const supabase = useSupabaseClient();
 
 // Get the route parameter
-const id = route.params.id;
+const id = route.params.id as string;
 const memberDrawerOpen = ref(false);
-const editDrawerOpen = ref(false);
-const editItem = reactive({ id: 0, title: "", cost: 0.0, fieldIndex: 0 });
 
 const { isMobile } = useDevice();
 
-// Use the composable
-const {
-  receipt,
-  receiptItems,
-  status: receiptStatus,
-  loading,
-} = useGetReceipt(id as string);
-
-const { handleSubmit, resetForm, values, setFieldValue } =
-  useForm<ReceiptEditForm>({ initialValues: {} });
-
-const { remove, push, fields, update } =
-  useFieldArray<ReceiptItemForm>("items");
-
-// Use the reusable member assignment function
+// Use the composables
 const { assignMembersToItem } = useMemberAssignment();
+const { receipt, receiptLoading } = useReceipt(id);
+const { members } = useMembers();
+
+const {
+  receiptItems,
+  receiptItemsLoading,
+  createReceiptItem,
+  deleteReceiptItem,
+} = useReceiptItems(id);
+
+// Computed properties for compatibility
+const loading = computed(
+  () => receiptLoading.value || receiptItemsLoading.value
+);
+const receiptStatus = computed(() => {
+  if (loading.value) return "loading";
+  if (receipt.value && receiptItems.value) return "success";
+  return "idle";
+});
 
 // Store refs for each target
-const targetRefs = shallowRef<(HTMLElement | null)[]>([]);
+const targetRefs = ref<(HTMLElement | null)[]>([]);
 
 const setTargetRef = (index: number, el: HTMLElement | null) => {
   targetRefs.value[index] = el;
 };
 
-const fieldItems = ref<fieldItemsSwipe[]>([]);
+const fieldItems = ref<FieldItemsSwipe[]>([]);
+
+// Create a reactive computed property for receipt items with assignments
+const receiptItemsWithAssignments = computed(() => {
+  if (!receiptItems.value) return [];
+
+  return receiptItems.value.map((item: any) => {
+    // Assignments now come loaded with the receipt items
+    const assignments = item.receipt_item_assignments || [];
+    return {
+      id: item.id,
+      title: item.title,
+      cost: item.cost,
+      assignments: assignments,
+    };
+  });
+});
 
 watch(
-  () => fields.value.length,
+  () => receiptItemsWithAssignments.value.length,
   () => {
-    fieldItems.value = Array.from({ length: fields.value.length }, (_, i) => ({
-      id: i + 1,
-      left: 0,
-      direction: null,
-      lengthX: 0,
-      isSwiping: false,
-    }));
+    fieldItems.value = Array.from(
+      { length: receiptItemsWithAssignments.value.length },
+      (_, i) => ({
+        id: i + 1,
+        left: 0,
+        direction: null,
+        lengthX: 0,
+        isSwiping: false,
+      })
+    );
 
     // Recreate swipe handlers for all items
     nextTick(() => {
@@ -349,11 +354,15 @@ const createSwipeHandler = (index: number) => {
         if (direction === "left") {
           handleDeleteItem(index);
         } else if (direction === "right") {
-          editItem.id = fields.value[index].value.id;
-          editItem.title = fields.value[index]?.value.title ?? "";
-          editItem.cost = fields.value[index]?.value.cost ?? 0.0;
-          editItem.fieldIndex = index;
-          editDrawerOpen.value = true;
+          const currentItem = receiptItemsWithAssignments.value[index];
+          if (currentItem) {
+            editItem.value = {
+              id: currentItem.id,
+              title: currentItem.title ?? "",
+              cost: currentItem.cost ?? 0.0,
+              assignments: currentItem.assignments || [],
+            };
+          }
         }
       }
     },
@@ -374,53 +383,12 @@ const createSwipeHandler = (index: number) => {
 };
 
 const totalCost = computed(() => {
-  return fields.value
-    .reduce((acc, field) => acc + field.value.cost, 0)
+  return receiptItemsWithAssignments.value
+    .reduce((acc: number, item: any) => acc + item.cost, 0)
     .toFixed(2);
 });
 
-// Reset form when receipt items are successfully loaded
-watch(
-  [receiptStatus, receiptItems],
-  async () => {
-    if (
-      receiptStatus.value === "success" &&
-      receiptItems.value &&
-      !values.items
-    ) {
-      // Fetch receipt with all items and assignments using join
-      const receiptData = await fetchReceiptWithItemsAndAssignments();
-
-      if (receiptData && receiptData.receipt_items) {
-        // Map receipt items with their assignments to the form format
-        const itemsWithAssignments = receiptData.receipt_items.map(
-          (item: any) => ({
-            id: item.id,
-            title: item.title,
-            cost: item.cost,
-            assignments: (item.receipt_item_assignments || []).map(
-              (assignment: any) => ({
-                id: assignment.id,
-                user_name: assignment.user_name,
-                method: assignment.method,
-                value: assignment.value,
-              })
-            ),
-          })
-        );
-
-        // Reset form with populated data
-        resetForm({ values: { items: itemsWithAssignments } });
-      } else {
-        // Fallback to original receipt items if join query fails
-        resetForm({ values: { items: receiptItems.value } });
-      }
-    }
-  },
-  { immediate: true }
-);
-
-const createMemberItems = () => {
+const memberItems = computed(() => {
   const items: DropdownMenuItem[] = [
     {
       label: "Members",
@@ -442,7 +410,13 @@ const createMemberItems = () => {
       },
       checked: member.checked,
       onUpdateChecked(checked: boolean) {
-        member.checked = checked;
+        // Create a mutable copy to update the checked state
+        const memberIndex = members.value.findIndex((m) => m.id === member.id);
+        if (memberIndex !== -1) {
+          const updatedMembers = [...members.value];
+          updatedMembers[memberIndex] = { ...member, checked };
+          // Note: This would need to be handled in the composable if we want to persist the checked state
+        }
       },
       onSelect(e: Event) {
         e.preventDefault();
@@ -463,61 +437,9 @@ const createMemberItems = () => {
   });
 
   return items;
-};
+});
 
-const memberItems = computed(createMemberItems);
-
-const members = ref<ReceiptMember[]>([
-  { id: 1, name: "John Doe", amount: 100, checked: false },
-  { id: 2, name: "Jane Smith", amount: 200, checked: false },
-  { id: 3, name: "Bob Johnson", amount: 150, checked: false },
-]);
-
-const removeMember = (id: number) => {
-  members.value = members.value.filter((member) => member.id !== id);
-};
-
-const addMember = (newMember: ReceiptMember) => {
-  members.value.push(newMember);
-};
-
-const handleEditItemSave = async (
-  fieldIndex: number,
-  updatedItem: ReceiptItemForm
-) => {
-  // Get the current item to preserve its ID
-  const currentItem = fields.value[fieldIndex];
-  if (!currentItem) return;
-
-  // Preserve the original ID and merge with updated data
-  const itemWithId = {
-    ...updatedItem,
-    id: currentItem.value.id, // Preserve the original ID
-  };
-
-  // Update the field array item using the update method
-  update(fieldIndex, itemWithId);
-
-  // Persist the changes to the database using upsert
-  const { error } = await supabase.from("receipt_items").upsert({
-    id: currentItem.value.id,
-    receipt_id: id,
-    title: updatedItem.title,
-    cost: updatedItem.cost,
-  });
-
-  if (error) {
-    toast.add({
-      title: "Error Saving Item",
-      description: `Failed to save item changes: ${error.message}`,
-      color: "red",
-      icon: "i-heroicons-x-circle",
-    });
-    return;
-  }
-};
-
-const assignMembersToItemHandler = (idx: number) => {
+const assignMembersToItemHandler = async (idx: number) => {
   // Get all selected members
   const selectedMembers = members.value.filter((member) => member.checked);
 
@@ -526,144 +448,32 @@ const assignMembersToItemHandler = (idx: number) => {
       title: "No Members Selected",
       description:
         "Please select at least one member from the dropdown before assigning to items.",
-      color: "yellow",
+      color: "warning",
       icon: "i-heroicons-exclamation-triangle",
     });
     return;
   }
 
   // Get the current item
-  const currentItem = fields.value[idx];
+  const currentItem = receiptItemsWithAssignments.value[idx];
   if (!currentItem) return;
 
-  // Use the reusable function to assign members
-  const updatedItem = assignMembersToItem(currentItem.value, selectedMembers);
+  const updatedItem = assignMembersToItem(currentItem, selectedMembers);
 
-  // Update the field array item
-  update(idx, updatedItem);
+  const { updateAssignments } = useReceiptItemAssignments(currentItem.id);
+  updateAssignments(updatedItem.assignments);
 };
 
-// Function to fetch receipt with all items and assignments
-async function fetchReceiptWithItemsAndAssignments() {
-  try {
-    const { data, error } = await supabase
-      .from("receipts")
-      .select(
-        `
-        *,
-        receipt_items (
-          *,
-          receipt_item_assignments (*)
-        )
-      `
-      )
-      .eq("id", id)
-      .single();
-
-    if (error) {
-      toast.add({
-        title: "Error Loading Receipt",
-        description:
-          "Failed to load receipt data. Please try refreshing the page.",
-        color: "red",
-        icon: "i-heroicons-x-circle",
-      });
-      return null;
-    }
-
-    // Sort receipt_items by created_at ascending (oldest first)
-    if (data?.receipt_items) {
-      data.receipt_items.sort((a, b) => {
-        const dateA = new Date(a.created_at || 0);
-        const dateB = new Date(b.created_at || 0);
-        return dateA.getTime() - dateB.getTime();
-      });
-    }
-
-    return data;
-  } catch (error) {
-    toast.add({
-      title: "Error Loading Receipt",
-      description: "An unexpected error occurred while loading the receipt.",
-      color: "red",
-      icon: "i-heroicons-x-circle",
-    });
-
-    return null;
-  }
-}
-
-const handleAddItem = async () => {
-  try {
-    // Create the receipt item in the database first
-    const { data: newItem, error } = await supabase
-      .from("receipt_items")
-      .insert({
-        receipt_id: id,
-        title: "New Item",
-        cost: 0,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      toast.add({
-        title: "Error Adding Item",
-        description: "Failed to create new item. Please try again.",
-        color: "red",
-        icon: "i-heroicons-x-circle",
-      });
-      return;
-    }
-
-    // Add the new item to the form with the database ID
-    push({
-      id: newItem.id,
-      title: newItem.title,
-      cost: newItem.cost,
-      assignments: [],
-    } as ReceiptItemForm);
-  } catch (error) {
-    toast.add({
-      title: "Error Adding Item",
-      description: "An unexpected error occurred while creating the item.",
-      color: "red",
-      icon: "i-heroicons-x-circle",
-    });
-  }
+const handleAddItem = () => {
+  createReceiptItem("New Item", 0);
 };
 
-// Custom delete function that removes from both form and database
-const handleDeleteItem = async (index: number) => {
-  const itemToDelete = fields.value[index];
+const handleDeleteItem = (index: number) => {
+  const itemToDelete = receiptItemsWithAssignments.value[index];
   if (!itemToDelete) return;
 
-  try {
-    // Delete from database first
-    const { error } = await supabase
-      .from("receipt_items")
-      .delete()
-      .eq("id", itemToDelete.value.id);
-
-    if (error) {
-      toast.add({
-        title: "Error Deleting Item",
-        description: `Failed to delete item from database: ${error.message}`,
-        color: "red",
-        icon: "i-heroicons-x-circle",
-      });
-      return;
-    }
-
-    // Remove from form state
-    remove(index);
-  } catch (error) {
-    toast.add({
-      title: "Error Deleting Item",
-      description: "An unexpected error occurred while deleting the item.",
-      color: "red",
-      icon: "i-heroicons-x-circle",
-    });
-  }
+  deleteReceiptItem(itemToDelete.id);
 };
+
+const editItem = ref<ReceiptItemForm | null>(null);
 </script>

@@ -1,6 +1,3 @@
-import { useState } from "#app";
-import { useSupabaseClient } from "#imports"; // auto-imported by Nuxt Supabase
-
 export const useReceipts = () => {
   const receipts = useState<any[]>("receipts", () => []);
 

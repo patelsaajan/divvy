@@ -38,7 +38,7 @@ export type ReceiptItemAssignmentForm = Omit<
 > & { id?: string };
 
 export type ReceiptItemForm = {
-  id?: string | number;
+  id: string;
   title: string;
   cost: number;
   assignments: ReceiptItemAssignmentForm[];
@@ -51,13 +51,12 @@ export type ReceiptEditForm = {
 // ---- Component types ----
 
 export type ReceiptMember = {
-  id: number;
+  id: string;
   name: string;
-  amount: number;
   checked: boolean;
 };
 
-export type fieldItemsSwipe = {
+export type FieldItemsSwipe = {
   id: number;
   left: number;
   direction: string | null;

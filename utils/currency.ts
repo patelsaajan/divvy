@@ -20,9 +20,6 @@ export function formatCurrency(
     }).format(amount);
   } catch (error) {
     // Fallback to GBP if the currency/locale combination is invalid
-    console.warn(
-      `Invalid currency/locale combination: ${currency}/${locale}, falling back to GBP`
-    );
     return new Intl.NumberFormat("en-GB", {
       style: "currency",
       currency: "GBP",
