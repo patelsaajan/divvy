@@ -536,6 +536,12 @@ const handleDeleteItem = (index: number) => {
     onConfirm  : () => {
       modalDeleteConfirmation.close();
       deleteReceiptItem(itemToDelete.id);
+      toast.add({
+        title: "Item Deleted",
+        description: `The item ${itemToDelete.title} has been deleted.`,
+        color: "error",
+        icon: "i-heroicons-trash",
+      });
     }
   });
 };
