@@ -14,7 +14,7 @@
     <PageHeader title="Summary" />
     <UTable
       v-model:expanded="expanded"
-      :data="data"
+      :data="dataTest"
       :columns="columns"
       :ui="{ tr: 'data-[expanded=true]:bg-elevated/50' }"
       class="flex-1"
@@ -52,6 +52,8 @@ import type { TableColumn } from '@nuxt/ui'
 
 const { id } = useRoute().params;
 const expanded = ref({ null: true })
+
+const { receiptItems, receiptItemsStatus, receiptItemsError } = useMembersTotals(id as string);
 
 type Item = {
   name: string
@@ -119,7 +121,7 @@ const columns: TableColumn<Payment>[] = [
 ]
 
 
-const data = ref<Payment[]>([
+const dataTest = ref<Payment[]>([
   {
     name: 'James Anderson',
     total: 36.50,
