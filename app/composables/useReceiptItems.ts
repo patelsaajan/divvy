@@ -25,7 +25,8 @@ export const useReceiptItems = (receiptId: string) => {
         .from(tables.receiptItems)
         .select("*")
         .eq("receipt_id", receiptId)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: true })
+        .order("title", { ascending: true });
 
       if (error) throw error;
 
