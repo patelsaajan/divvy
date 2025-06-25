@@ -456,7 +456,7 @@ const totalValidation = computed(() => {
   const total = totalAmount.value;
   const cost = formState.value.cost;
   const hasAssignments = formState.value.assignments.length > 0;
-  const Epsilon = 0.0001;
+  const Epsilon = 0.01; // Increased tolerance for floating point precision issues
 
   // If no assignments, show a neutral message
   if (!hasAssignments) {
@@ -467,31 +467,49 @@ const totalValidation = computed(() => {
   }
 
   if (splitMethod.value === "percent") {
-    if (Math.abs(total - 1) < Epsilon)
+    // Handle zero cost items specially
+    if (cost === 0) {
+      // For zero cost items, don't show validation warnings since percentages don't matter
+      return {
+        class: "bg-gray-100 dark:bg-gray-800",
+        message: "Item has no cost - percentages don't affect the total.",
+      };
+    }
+
+    // Normal percentage validation for non-zero cost items
+    if (Math.abs(total - 1) < Epsilon) {
       return {
         class: "bg-green-100 dark:bg-green-900/50",
         message: "Perfect! Total is 100%.",
       };
-    if (total > 1)
+    }
+    if (total > 1) {
       return {
         class: "bg-red-100 dark:bg-red-900/50",
         message: "Total exceeds 100%.",
       };
+    }
+
     return {
       class: "bg-yellow-100 dark:bg-yellow-900/50",
       message: "Total is less than 100%.",
     };
   } else {
-    if (Math.abs(total - cost) < Epsilon)
+    // Amount validation
+    if (Math.abs(total - cost) < Epsilon) {
       return {
         class: "bg-green-100 dark:bg-green-900/50",
         message: "Perfect! Total matches item cost.",
       };
-    if (total > cost)
+    }
+
+    if (total > cost) {
       return {
         class: "bg-red-100 dark:bg-red-900/50",
         message: "Total exceeds item cost.",
       };
+    }
+
     return {
       class: "bg-yellow-100 dark:bg-yellow-900/50",
       message: "Total is less than item cost.",
@@ -519,15 +537,19 @@ const handleSave = async () => {
   const hasAssignments = formState.value.assignments.length > 0;
   let isValid = true;
   let errorMessage = "";
+  const Epsilon = 0.01; // Same tolerance as validation
 
   // Only validate totals if there are assignments
   if (hasAssignments) {
-    if (splitMethod.value === "percent" && Math.abs(total - 1) > 0.01) {
-      isValid = false;
-      errorMessage = "Total percentage must be exactly 100%.";
+    if (splitMethod.value === "percent") {
+      // Skip validation for zero cost items since percentages don't matter
+      if (cost > 0 && Math.abs(total - 1) > Epsilon) {
+        isValid = false;
+        errorMessage = "Total percentage must be exactly 100%.";
+      }
     } else if (
       splitMethod.value === "amount" &&
-      Math.abs(total - cost) > 0.01
+      Math.abs(total - cost) > Epsilon
     ) {
       isValid = false;
       errorMessage = "Total amount must exactly match the item cost.";
