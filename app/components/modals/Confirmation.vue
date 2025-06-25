@@ -9,7 +9,7 @@
           size="xl"
           icon="i-heroicons-trash"
           :label="confirmText"
-          @click="emit('confirm', true)"
+          @click="onConfirm"
         />
       </div>
     </template>
@@ -23,8 +23,7 @@ defineProps<{
   confirmText: string;
   cancelText: string;
   onConfirm: () => void;
-  onCancel: () => void;
 }>();
 
-const emit = defineEmits<{ close: [boolean]; confirm: [boolean] }>();
+const emit = defineEmits<{ close: [boolean] }>();
 </script>

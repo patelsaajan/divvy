@@ -524,11 +524,8 @@ const modalDeleteConfirmation = overlay.create(ModalsConfirmation, {
     title      : "Delete Item",
     confirmText: "Delete",
     cancelText: "Cancel",
-    close: () => {
-      console.log("close");
-    },
   },
-  });
+});
 
 const handleDeleteItem = (index: number) => {
   const itemToDelete = receiptItemsWithAssignments.value[index];
