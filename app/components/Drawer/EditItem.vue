@@ -209,16 +209,16 @@
               <UButton
                 v-for="member in unassignedMembers"
                 :key="member.id"
-                variant="ghost"
-                class="p-0.5"
+                class="p-0. cursor-pointer"
+                variant="link"
                 @click="addMember(member)"
               >
                 <UAvatar :alt="member.name" size="xl" />
               </UButton>
               <UButton
                 size="xl"
-                variant="ghost"
-                class="p-0.5"
+                class="p-0.5 cursor-pointer"
+                variant="link"
                 @click="handleManageMembersClick"
               >
                 <UAvatar size="xl">
@@ -275,8 +275,8 @@ const toast = useToast();
 const isSaving = ref(false);
 
 const { members } = useMembers();
-const { updateAssignments } = useReceiptItemAssignments(props.item.id);
-const { updateReceiptItem } = useReceiptItems(props.receiptId!);
+const { updateAssignments } = useReceiptItemAssignments(props.receiptId);
+const { updateReceiptItem } = useReceiptItems(props.receiptId);
 
 const formState = ref<ReceiptItemForm>(JSON.parse(JSON.stringify(props.item)));
 
@@ -285,31 +285,6 @@ const splitMethod = ref<"percent" | "amount">("percent");
 const currentAssignments = computed(() => {
   if (!props.item.id) return [];
   return props.item.assignments || [];
-});
-
-// Get all available members (including those not in current members list)
-const allAvailableMembers = computed(() => {
-  // Start with current members
-  const availableMembers = [...members.value];
-
-  // Add any members from assignments that aren't in the current members list
-  const assignedMemberNames = currentAssignments.value.map((a) => a.user_name);
-  const currentMemberNames = members.value.map((m) => m.name);
-
-  const missingMembers = assignedMemberNames.filter(
-    (name) => !currentMemberNames.includes(name)
-  );
-
-  // Create placeholder members for missing ones
-  missingMembers.forEach((name) => {
-    availableMembers.push({
-      id: `missing-${name}`,
-      name: name,
-      checked: false,
-    });
-  });
-
-  return availableMembers;
 });
 
 // Get unassigned members (those not in current assignments)
@@ -592,13 +567,13 @@ const handleSave = async () => {
       if (!a.id) a.id = uuid();
     });
 
-    // Update the receipt item title and cost
+    // Update the receipt item title and cost first
     updateReceiptItem(props.item.id, {
       title: itemToSave.title,
       cost: itemToSave.cost,
     });
 
-    // Use the composable directly to save to database
+    // Then update assignments (this triggers cache invalidation automatically)
     updateAssignments(
       props.item.id,
       itemToSave.assignments,

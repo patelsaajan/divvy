@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { v4 as uuid } from "uuid";
+import { toRef } from "vue";
 import type { Database } from "~~/types/database.types";
 import type { ReceiptItemAssignmentForm } from "~~/types/receipts";
 import { tables } from "~~/utils/tables";
@@ -18,13 +19,17 @@ const dbToFormAssignment = (
   value: dbAssignment.value,
 });
 
-export const useReceiptItemAssignments = (receiptId: string) => {
+// Singleton pattern to ensure only one instance per receipt
+let assignmentsState: ReturnType<typeof createAssignmentsState> | null = null;
+let currentReceiptId: string | null = null;
+
+function createAssignmentsState(receiptId: string) {
   const client = useSupabaseClient<Database>();
   const toast = useToast();
   const queryClient = useQueryClient();
 
   const assignmentsQuery = useQuery({
-    queryKey: [tables.receiptItemAssignments, receiptId],
+    queryKey: ["receipt-item-assignments", receiptId],
     queryFn: async (): Promise<Record<string, ReceiptItemAssignmentForm[]>> => {
       const { data: receiptItems, error: itemsError } = await client
         .from(tables.receiptItems)
@@ -77,7 +82,8 @@ export const useReceiptItemAssignments = (receiptId: string) => {
 
       const assignmentsToDelete = previousAssignments
         .filter((a) => a.id && !newAssignmentIds.has(a.id))
-        .map((a) => a.id);
+        .map((a) => a.id)
+        .filter((id): id is string => id !== undefined);
 
       // 1. Delete assignments that are not in the new set
       if (assignmentsToDelete.length > 0) {
@@ -111,7 +117,7 @@ export const useReceiptItemAssignments = (receiptId: string) => {
     onSuccess: () => {
       // Invalidate query to refresh the data
       queryClient.invalidateQueries({
-        queryKey: [tables.receiptItemAssignments, receiptId],
+        queryKey: ["receipt-item-assignments", receiptId],
       });
     },
     onError: (error: Error) => {
@@ -141,7 +147,7 @@ export const useReceiptItemAssignments = (receiptId: string) => {
       if (error) throw error;
 
       queryClient.invalidateQueries({
-        queryKey: [tables.receiptItemAssignments, receiptId],
+        queryKey: ["receipt-item-assignments", receiptId],
       });
     },
     onError: (error: Error) => {
@@ -171,9 +177,14 @@ export const useReceiptItemAssignments = (receiptId: string) => {
     return deleteAssignmentMutation.mutate({ itemId, assignmentId });
   };
 
+  // Create a reactive reference to the query data
+  const assignmentsMap = toRef(assignmentsQuery, "data") as Ref<
+    Record<string, ReceiptItemAssignmentForm[]>
+  >;
+
   return {
     // Assignments data
-    assignmentsMap: assignmentsQuery.data,
+    assignmentsMap,
     assignmentsLoading: assignmentsQuery.isLoading,
     assignmentsError: assignmentsQuery.error,
     assignmentsRefresh: () => assignmentsQuery.refetch(),
@@ -188,4 +199,35 @@ export const useReceiptItemAssignments = (receiptId: string) => {
     deleteAssignmentLoading: deleteAssignmentMutation.isPending,
     deleteAssignmentError: deleteAssignmentMutation.error,
   };
+}
+
+export const useReceiptItemAssignments = (receiptId?: string) => {
+  // If no receiptId is provided, return a default state
+  if (!receiptId) {
+    return {
+      assignmentsMap: ref({}),
+      assignmentsLoading: ref(false),
+      assignmentsError: ref(null),
+      assignmentsRefresh: () => Promise.resolve(),
+      updateAssignments: () => {},
+      updateAssignmentsLoading: ref(false),
+      updateAssignmentsError: ref(null),
+      deleteAssignment: () => {},
+      deleteAssignmentLoading: ref(false),
+      deleteAssignmentError: ref(null),
+    };
+  }
+
+  // Clear state when switching receipts
+  if (currentReceiptId !== receiptId) {
+    assignmentsState = null;
+    currentReceiptId = receiptId;
+  }
+
+  // Create new state if it doesn't exist
+  if (!assignmentsState) {
+    assignmentsState = createAssignmentsState(receiptId);
+  }
+
+  return assignmentsState;
 };

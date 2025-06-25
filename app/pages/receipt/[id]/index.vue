@@ -47,6 +47,7 @@
                 color="primary"
                 variant="outline"
                 icon="i-lucide-users"
+                class="cursor-pointer"
               />
             </UDropdownMenu>
           </div>
@@ -118,6 +119,7 @@
                   <div class="font-medium">{{ item.title }}</div>
                   <UAvatarGroup
                     v-if="item.assignments && item.assignments.length > 0"
+                    :key="`${item.id}-${assignmentsHash}`"
                     class="ml-2"
                   >
                     <UAvatar
@@ -191,15 +193,15 @@
           <div class="flex space-x-2 mt-4 px-2">
             <UButton
               icon="i-lucide-users"
-              class="flex-1 bg-gray-700 text-white py-2 rounded text-sm flex items-center justify-center"
+              class="flex-1 bg-gray-700 text-white py-2 rounded text-sm flex items-center justify-center cursor-pointer"
               @click="memberDrawerOpen = true"
             >
-              <span class="ml-2">Members</span>
+              Members
             </UButton>
             <UButton
               icon="i-lucide-plus"
               color="secondary"
-              class="flex-1 text-white py-2 rounded text-sm flex items-center justify-center"
+              class="flex-1 text-white py-2 rounded text-sm flex items-center justify-center cursor-pointer"
               @click="handleAddItem"
             >
               Add Item
@@ -208,7 +210,7 @@
           <div class="flex justify-between items-center px-2">
             <UButton
               icon="i-lucide-chart-bar"
-              class="flex-1 py-2 bg-gray-700 text-white rounded text-sm flex items-center justify-center"
+              class="flex-1 py-2 bg-gray-700 text-white rounded text-sm flex items-center justify-center cursor-pointer"
               :to="`/summary/${id}`"
             >
               Summary
@@ -244,8 +246,12 @@ import { useMembers } from "~/composables/useMembers";
 import { useReceipt } from "~/composables/useReceipt";
 import { useReceiptItemAssignments } from "~/composables/useReceiptItemAssignments";
 import { useReceiptItems } from "~/composables/useReceiptItems";
-import type { FieldItemsSwipe, ReceiptItemForm } from "~~/types/receipts";
-import { formatCurrency } from "~~/utils/currency";
+import type {
+  FieldItemsSwipe,
+  ReceiptItemAssignmentForm,
+  ReceiptItemForm,
+} from "~~/types/receipts";
+import { distributeAmountEvenly, formatCurrency } from "~~/utils/currency";
 import { formatDate } from "~~/utils/formatDate";
 
 const route = useRoute();
@@ -258,9 +264,9 @@ const memberDrawerOpen = ref(false);
 const { isMobile } = useDevice();
 
 // Use the composables
-const { assignMembersToItem } = useMemberAssignment();
 const { receipt, receiptLoading } = useReceipt(id);
-const { members } = useMembers();
+const { members, updateMemberChecked } = useMembers();
+const { toggleMembersForItem } = useMemberAssignment();
 
 const {
   receiptItems,
@@ -271,6 +277,16 @@ const {
 
 const { assignmentsMap, assignmentsLoading, updateAssignments } =
   useReceiptItemAssignments(id);
+
+// TODO: Find a better way to force re-render the avatar group
+// Create a hash of the assignments map for tracking changes
+const assignmentsHash = computed(() => {
+  if (!assignmentsMap.value) return "";
+
+  // Create a simple hash by stringifying the assignments map
+  const assignmentsString = JSON.stringify(assignmentsMap.value);
+  return btoa(assignmentsString).slice(0, 8); // Use base64 and take first 8 chars
+});
 
 // Computed properties for compatibility
 const loading = computed(
@@ -299,14 +315,22 @@ const fieldItems = ref<FieldItemsSwipe[]>([]);
 const receiptItemsWithAssignments = computed(() => {
   if (!receiptItems.value) return [];
 
-  return receiptItems.value.map((item: any) => {
+  const result = receiptItems.value.map((item) => {
+    // Access assignments in a way that Vue can track
+    const itemAssignments =
+      (assignmentsMap.value as Record<string, ReceiptItemAssignmentForm[]>)?.[
+        item.id
+      ] || [];
+
     return {
       id: item.id,
       title: item.title,
       cost: item.cost,
-      assignments: assignmentsMap.value?.[item.id] || [],
+      assignments: itemAssignments,
     };
   });
+
+  return result;
 });
 
 watch(
@@ -416,13 +440,7 @@ const memberItems = computed(() => {
       },
       checked: member.checked,
       onUpdateChecked(checked: boolean) {
-        // Create a mutable copy to update the checked state
-        const memberIndex = members.value.findIndex((m) => m.id === member.id);
-        if (memberIndex !== -1) {
-          const updatedMembers = [...members.value];
-          updatedMembers[memberIndex] = { ...member, checked };
-          // Note: This would need to be handled in the composable if we want to persist the checked state
-        }
+        updateMemberChecked(member.id, checked);
       },
       onSelect(e: Event) {
         e.preventDefault();
@@ -464,10 +482,35 @@ const assignMembersToItemHandler = async (idx: number) => {
   const currentItem = receiptItemsWithAssignments.value[idx];
   if (!currentItem) return;
 
-  const updatedItem = assignMembersToItem(currentItem, selectedMembers);
+  let newAssignments: ReceiptItemAssignmentForm[] = [];
+
+  if (selectedMembers.length === 0) {
+    // If no members are selected, clear all assignments
+    newAssignments = [];
+  } else {
+    // Toggle members for the item
+    const updatedItem = toggleMembersForItem(currentItem, selectedMembers);
+    newAssignments = updatedItem.assignments || [];
+
+    // Apply splitEvenly logic (same as edit drawer)
+    if (newAssignments.length > 0) {
+      const distributedAmounts = distributeAmountEvenly(
+        currentItem.cost,
+        newAssignments.length
+      );
+
+      newAssignments = newAssignments.map((assignment, index) => ({
+        ...assignment,
+        value: distributedAmounts[index] || 0,
+        method: "percent",
+      }));
+    }
+  }
+
+  // Use the existing updateAssignments function (same as edit drawer)
   updateAssignments(
     currentItem.id,
-    updatedItem.assignments,
+    newAssignments,
     currentItem.assignments || []
   );
 };

@@ -196,6 +196,14 @@ function createMembersState() {
     }
   };
 
+  // Update member checked state (UI state only)
+  const updateMemberChecked = (memberId: string, checked: boolean) => {
+    const member = members.value.find((m) => m.id === memberId);
+    if (member) {
+      member.checked = checked;
+    }
+  };
+
   // Fetch on mount
   onMounted(() => {
     fetchMembers();
@@ -209,6 +217,7 @@ function createMembersState() {
     addMember,
     removeMember,
     updateMember,
+    updateMemberChecked,
   };
 }
 

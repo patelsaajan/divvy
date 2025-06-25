@@ -1,19 +1,34 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import type { Database } from "~~/types/database.types";
+import type { Database, Tables, TablesUpdate } from "~~/types/database.types";
 import { tables } from "~~/utils/tables";
 
-// Type aliases for better readability
-type ReceiptItem = Database["public"]["Tables"]["receipt_items"]["Row"];
-type ReceiptItemInsert =
-  Database["public"]["Tables"]["receipt_items"]["Insert"];
-type ReceiptItemUpdate =
-  Database["public"]["Tables"]["receipt_items"]["Update"];
+type ReceiptItem = Tables<"receipt_items">;
+type ReceiptItemUpdate = TablesUpdate<"receipt_items">;
 
-export const useReceiptItems = (receiptId: string) => {
+export const useReceiptItems = (receiptId?: string) => {
   const client = useSupabaseClient<Database>();
   const user = useSupabaseUser();
   const toast = useToast();
   const queryClient = useQueryClient();
+
+  // If no receiptId is provided, return a default state
+  if (!receiptId) {
+    return {
+      receiptItems: ref([]),
+      receiptItemsLoading: ref(false),
+      receiptItemsError: ref(null),
+      receiptItemsRefresh: () => Promise.resolve(),
+      createReceiptItem: () => {},
+      createReceiptItemLoading: ref(false),
+      createReceiptItemError: ref(null),
+      updateReceiptItem: () => {},
+      updateReceiptItemLoading: ref(false),
+      updateReceiptItemError: ref(null),
+      deleteReceiptItem: () => {},
+      deleteReceiptItemLoading: ref(false),
+      deleteReceiptItemError: ref(null),
+    };
+  }
 
   // Query for receipt items
   const receiptItemsQuery = useQuery({
@@ -25,8 +40,8 @@ export const useReceiptItems = (receiptId: string) => {
         .from(tables.receiptItems)
         .select("*")
         .eq("receipt_id", receiptId)
-        .order("created_at", { ascending: true })
-        .order("title", { ascending: true });
+        .order("created_at", { ascending: true }) // primary ordering by created_at
+        .order("title", { ascending: true }); // secondary ordering by title
 
       if (error) throw error;
 
