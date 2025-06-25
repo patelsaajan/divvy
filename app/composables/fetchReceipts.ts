@@ -1,38 +1,39 @@
-import { useState } from "#app";
-import { useSupabaseClient } from "#imports"; // auto-imported by Nuxt Supabase
+import { tables } from "~~/utils/tables";
 
 export const useReceipts = () => {
   const receipts = useState<any[]>("receipts", () => []);
+  const loading = useState<boolean>("receipts-loading", () => false);
+  const error = useState<string | null>("receipts-error", () => null);
 
-  const loading = ref(false);
-  const error = ref<string | null>(null);
-
-  const client = useSupabaseClient();
-
-  async function refresh() {
+  const fetchReceipts = async () => {
+    const client = useSupabaseClient();
     loading.value = true;
     error.value = null;
 
-    const { data, error: sbError } = await client.from("receipts").select("*");
-
-    if (sbError) {
-      error.value = sbError.message;
-    } else if (data) {
+    try {
+      const { data, error: sbError } = await client
+        .from(tables.receipts)
+        .select("*");
+      if (sbError) throw sbError;
       receipts.value = data;
+    } catch (err) {
+      error.value =
+        err instanceof Error ? err.message : "Failed to fetch receipts";
+    } finally {
+      loading.value = false;
     }
+  };
 
-    loading.value = false;
-  }
-
+  // Watch for changes in receipts array
   watch(
     receipts,
     (newReceipts) => {
       if (newReceipts.length === 0 && !loading.value) {
-        refresh();
+        fetchReceipts();
       }
     },
     { immediate: true }
   );
 
-  return { receipts, loading, error, refresh };
+  return { receipts, loading, error, refresh: fetchReceipts };
 };

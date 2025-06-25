@@ -20,7 +20,7 @@ const signInWithOtp = async () => {
     email: email.value,
     options: {
       shouldCreateUser: false,
-      emailRedirectTo: config.public.supabaseRedirectUrl as string,
+      emailRedirectTo: config.public.supabaseRedirectUrl,
     },
   });
 

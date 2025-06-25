@@ -33,20 +33,16 @@
         >
           <div class="flex items-center space-x-3">
             <UAvatar :alt="person.name" />
-            <div>
-              <p class="font-medium text-gray-900 dark:text-white">
-                {{ person.name }}
-              </p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">
-                ${{ person.amount.toFixed(2) }}
-              </p>
-            </div>
+            <p class="font-medium text-gray-900 dark:text-white">
+              {{ person.name }}
+            </p>
           </div>
           <UButton
             variant="ghost"
             color="error"
             icon="i-heroicons-trash"
-            @click="emit('removeMember', person.id)"
+            :loading="removingMemberId === person.id"
+            @click="handleRemoveMember(person.id)"
           />
         </div>
 
@@ -58,13 +54,14 @@
             v-model="newPerson"
             placeholder="Enter a name"
             class="flex-1"
-            @keyup.enter="addPerson"
+            :disabled="isAddingMember"
           />
           <UButton
             color="primary"
             icon="i-heroicons-plus"
-            @click="addPerson"
-            :disabled="!newPerson.trim()"
+            @click="handleAddPerson"
+            :disabled="!newPerson.trim() || isAddingMember"
+            :loading="isAddingMember"
           >
             Add
           </UButton>
@@ -75,19 +72,19 @@
 </template>
 
 <script lang="ts" setup>
-import type { ReceiptMember } from "~~/types/receipts";
+import { useMembers } from "~/composables/useMembers";
 
 const newPerson = ref("");
+const isAddingMember = ref(false);
+const removingMemberId = ref<string | number | null>(null);
+const { members, addMember, removeMember } = useMembers();
 
 const props = defineProps<{
   open: boolean;
-  members: ReceiptMember[];
 }>();
 
 const emit = defineEmits<{
   (e: "close"): void;
-  (e: "removeMember", id: number): void;
-  (e: "addMember", member: ReceiptMember): void;
 }>();
 
 // Create a computed property for two-way binding
@@ -100,18 +97,31 @@ const isOpen = computed({
   },
 });
 
-const addPerson = () => {
-  if (!newPerson.value.trim()) return;
+const handleAddPerson = async () => {
+  if (!newPerson.value.trim() || isAddingMember.value) return;
 
-  const newMember: ReceiptMember = {
-    id: Date.now(),
-    name: newPerson.value.trim(),
-    amount: 0,
-    checked: false,
-  };
+  isAddingMember.value = true;
 
-  emit("addMember", newMember);
-  newPerson.value = "";
+  try {
+    await addMember(newPerson.value.trim());
+    newPerson.value = "";
+  } finally {
+    isAddingMember.value = false;
+  }
+};
+
+const handleRemoveMember = async (id: string) => {
+  if (removingMemberId.value === id) return;
+
+  removingMemberId.value = id;
+
+  try {
+    const success = await removeMember(id);
+    // If the operation failed, the member will still be in the list
+    // and the error will be shown via the toast in the composable
+  } finally {
+    removingMemberId.value = null;
+  }
 };
 </script>
 

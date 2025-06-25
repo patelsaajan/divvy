@@ -27,7 +27,7 @@ export const useMemberAssignment = () => {
       (member, index) => ({
         id: uuid(),
         user_name: member.name,
-        method: "equal",
+        method: "percent",
         value: distributedValues[index] || 0,
       })
     );
@@ -85,9 +85,60 @@ export const useMemberAssignment = () => {
     };
   };
 
+  /**
+   * Toggles members for a receipt item - adds if not assigned, removes if assigned
+   * @param currentItem - The current receipt item
+   * @param selectedMembers - Array of members that are currently selected/checked
+   * @returns Updated receipt item with toggled assignments
+   */
+  const toggleMembersForItem = (
+    currentItem: ReceiptItemForm,
+    selectedMembers: ReceiptMember[]
+  ): ReceiptItemForm => {
+    const currentAssignments = currentItem.assignments || [];
+    const selectedMemberNames = selectedMembers.map((m) => m.name);
+
+    // Get currently assigned member names
+    const currentlyAssignedNames = currentAssignments.map((a) => a.user_name);
+
+    // Start with current assignments
+    let newAssignments = [...currentAssignments];
+
+    // For each selected member, toggle their assignment
+    selectedMembers.forEach((member) => {
+      const isCurrentlyAssigned = currentlyAssignedNames.includes(member.name);
+
+      if (isCurrentlyAssigned) {
+        // Remove the member if they're currently assigned
+        newAssignments = newAssignments.filter(
+          (assignment) => assignment.user_name !== member.name
+        );
+      } else {
+        // Add the member if they're not currently assigned
+        newAssignments.push({
+          id: uuid(),
+          user_name: member.name,
+          method: "percent",
+          value: 0, // Will be calculated by splitEvenly
+        });
+      }
+    });
+
+    // Note: Unselected members are left unchanged in their current assignment state
+    // The actual splitting will be handled by the splitEvenly function
+    // in the edit drawer or wherever this is used. This function just handles
+    // the toggle logic of adding/removing selected members.
+
+    return {
+      ...currentItem,
+      assignments: newAssignments,
+    };
+  };
+
   return {
     assignMembersToItem,
     assignSpecificMembers,
     removeMembersFromItem,
+    toggleMembersForItem,
   };
 };

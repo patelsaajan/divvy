@@ -1,34 +1,11 @@
+import type { TablesInsert } from "./database.types";
+
 // ---- Supabase schemas ----
 
-export type ReceiptSchema = {
-  id: string;
-  user_id: string;
-  storage_path: string;
-  total_cost: number | null;
-  currency: string | null;
-  raw_json?: Record<string, any>;
-  title: string | null;
-  emoji: string | null;
-  vendor: string | null;
-  country_code: string | null;
-  locale: string | null;
-  uploaded_at: string;
-};
-
-export type ReceiptItemSchema = {
-  receipt_id: string;
-  title: string | null;
-  cost: number | null;
-};
-
-export type ReceiptItemAssignmentSchema = {
-  id: string;
-  receipt_item_id: string;
-  user_name: string;
-  method: "equal" | "percent" | "amount";
-  value: number | null;
-  calculated_amount: number | null;
-};
+export type ReceiptSchema = TablesInsert<"receipts">;
+export type ReceiptItemSchema = TablesInsert<"receipt_items">;
+export type ReceiptItemAssignmentSchema =
+  TablesInsert<"receipt_item_assignments">;
 
 // ---- Form types ----
 
@@ -38,7 +15,7 @@ export type ReceiptItemAssignmentForm = Omit<
 > & { id?: string };
 
 export type ReceiptItemForm = {
-  id?: string | number;
+  id: string;
   title: string;
   cost: number;
   assignments: ReceiptItemAssignmentForm[];
@@ -51,13 +28,12 @@ export type ReceiptEditForm = {
 // ---- Component types ----
 
 export type ReceiptMember = {
-  id: number;
+  id: string;
   name: string;
-  amount: number;
   checked: boolean;
 };
 
-export type fieldItemsSwipe = {
+export type FieldItemsSwipe = {
   id: number;
   left: number;
   direction: string | null;

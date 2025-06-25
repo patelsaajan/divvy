@@ -91,6 +91,12 @@
                 class="flex-1 text-sm font-medium text-gray-900 dark:text-white"
               >
                 {{ assignment.user_name }}
+                <span
+                  v-if="!members.find((m) => m.name === assignment.user_name)"
+                  class="text-xs text-gray-500 ml-2"
+                >
+                  (legacy)
+                </span>
               </span>
 
               <!-- Input for Percentage Split -->
@@ -166,28 +172,59 @@
 
           <!-- Other Members -->
           <div>
-            <h4
-              class="text-sm font-medium text-gray-900 dark:text-white mb-2 pt-4 border-t border-gray-200 dark:border-gray-700"
+            <!-- Add Members Header -->
+            <div
+              class="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700"
             >
-              Add other members
-            </h4>
-            <div class="flex flex-wrap items-center gap-2">
+              <h4 class="text-sm font-medium text-gray-900 dark:text-white">
+                Add other members
+              </h4>
+
+              <!-- Add All / Remove All Buttons -->
+              <div class="flex gap-2">
+                <UButton
+                  color="primary"
+                  variant="outline"
+                  icon="i-heroicons-plus"
+                  size="sm"
+                  @click="addAllMembers"
+                  :disabled="unassignedMembers.length === 0"
+                >
+                  Add all
+                </UButton>
+                <UButton
+                  color="neutral"
+                  variant="outline"
+                  icon="i-heroicons-minus"
+                  size="sm"
+                  @click="removeAllMembers"
+                  :disabled="formState.assignments.length === 0"
+                >
+                  Remove all
+                </UButton>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 mt-3">
               <UButton
                 v-for="member in unassignedMembers"
                 :key="member.id"
-                variant="text"
-                class="p-1"
+                class="p-0. cursor-pointer"
+                variant="link"
                 @click="addMember(member)"
               >
                 <UAvatar :alt="member.name" size="xl" />
               </UButton>
               <UButton
-                icon="i-heroicons-user-plus"
-                variant="ghost"
                 size="xl"
-                class="rounded-full"
+                class="p-0.5 cursor-pointer"
+                variant="link"
                 @click="handleManageMembersClick"
-              />
+              >
+                <UAvatar size="xl">
+                  <UIcon name="i-heroicons-user-plus" />
+                </UAvatar>
+              </UButton>
             </div>
           </div>
         </div>
@@ -206,64 +243,74 @@
 </template>
 
 <script lang="ts" setup>
+import { v4 as uuid } from "uuid";
 import { computed, ref, watch } from "vue";
+import { useMembers } from "~/composables/useMembers";
+import { useReceiptItemAssignments } from "~/composables/useReceiptItemAssignments";
+import { useReceiptItems } from "~/composables/useReceiptItems";
 import type {
+  ReceiptItemAssignmentForm,
   ReceiptItemForm,
   ReceiptMember,
-  ReceiptItemAssignmentForm,
 } from "~~/types/receipts";
-import {
-  formatCurrency,
-  distributeAmountEvenly,
-  distributePercentageEvenly,
-} from "~~/utils/currency";
-import { v4 as uuid } from "uuid";
-
-const supabase = useSupabaseClient();
+import { distributeAmountEvenly, formatCurrency } from "~~/utils/currency";
 
 const props = defineProps<{
   open: boolean;
-  item: { id: number; title: string; cost: number };
-  fieldIndex?: number;
-  setFieldValue?: (field: string, value: any) => void;
-  members?: ReceiptMember[];
-  currentAssignments?: ReceiptItemAssignmentForm[];
+  item: {
+    id: string;
+    title: string;
+    cost: number;
+    assignments?: ReceiptItemAssignmentForm[];
+  };
+  receiptId?: string;
 }>();
 
 const emit = defineEmits<{
   (e: "close"): void;
-  (e: "save", fieldIndex: number, updatedItem: ReceiptItemForm): void;
   (e: "open-member-drawer"): void;
 }>();
 
 const toast = useToast();
 const isSaving = ref(false);
 
-const formState = ref<ReceiptItemForm>({
-  title: "",
-  cost: 0,
-  assignments: [],
-});
+const { members } = useMembers();
+const { updateAssignments } = useReceiptItemAssignments(props.receiptId);
+const { updateReceiptItem } = useReceiptItems(props.receiptId);
+
+const formState = ref<ReceiptItemForm>(JSON.parse(JSON.stringify(props.item)));
 
 const splitMethod = ref<"percent" | "amount">("percent");
+
+const currentAssignments = computed(() => {
+  if (!props.item.id) return [];
+  return props.item.assignments || [];
+});
+
+// Get unassigned members (those not in current assignments)
+const unassignedMembers = computed(() => {
+  const assignedNames = formState.value.assignments.map((a) => a.user_name);
+  // Only include current active members from Supabase, not legacy members
+  return members.value.filter((m) => !assignedNames.includes(m.name));
+});
 
 // --- Lifecycle and Watchers ---
 
 watch(
   () => props.open,
-  (isOpen) => {
-    if (isOpen) {
+  async (isOpen) => {
+    if (isOpen && props.item.id) {
       // Create deep copies to prevent reactivity issues.
       formState.value.title = JSON.parse(JSON.stringify(props.item.title));
       formState.value.cost = JSON.parse(JSON.stringify(props.item.cost));
 
-      // Use assignments from props (now populated from page level)
+      // Use assignments from the parent component
       formState.value.assignments = JSON.parse(
-        JSON.stringify(props.currentAssignments || [])
+        JSON.stringify(currentAssignments.value)
       );
 
       // Determine the split method from the first loaded assignment.
-      const firstAssignmentMethod = props.currentAssignments?.[0]?.method;
+      const firstAssignmentMethod = currentAssignments.value[0]?.method;
 
       // The UI has two modes: 'percent' (for percentages) and 'amount' (for fixed currency).
       // The data can have 'equal' or 'percent', which both map to the UI's 'percent' mode.
@@ -276,7 +323,7 @@ watch(
         const cost = formState.value.cost;
         if (cost > 0) {
           formState.value.assignments.forEach((a) => {
-            // The actual monetary value is now passed in props.currentAssignments.
+            // The actual monetary value is now passed from the database.
             // We convert it to a percentage for the UI.
             const percentage = (a.value ?? 0) / cost;
             // Round to 4 decimal places for percentage precision
@@ -291,15 +338,10 @@ watch(
 
 // --- Member Management ---
 
-const unassignedMembers = computed(() => {
-  const assignedNames = formState.value.assignments.map((a) => a.user_name);
-  return (props.members || []).filter((m) => !assignedNames.includes(m.name));
-});
-
 function addMember(member: ReceiptMember) {
   formState.value.assignments.push({
+    id: uuid(),
     user_name: member.name,
-    // The method is determined by the current UI mode.
     method: splitMethod.value,
     value: 0,
   });
@@ -311,6 +353,16 @@ function removeMember(userName: string) {
     (a) => a.user_name !== userName
   );
   splitEvenly();
+}
+
+function addAllMembers() {
+  unassignedMembers.value.forEach((member) => {
+    addMember(member);
+  });
+}
+
+function removeAllMembers() {
+  formState.value.assignments = [];
 }
 
 // --- Calculation Logic ---
@@ -403,34 +455,61 @@ const totalAmount = computed(() => {
 const totalValidation = computed(() => {
   const total = totalAmount.value;
   const cost = formState.value.cost;
-  const Epsilon = 0.0001;
+  const hasAssignments = formState.value.assignments.length > 0;
+  const Epsilon = 0.01; // Increased tolerance for floating point precision issues
+
+  // If no assignments, show a neutral message
+  if (!hasAssignments) {
+    return {
+      class: "bg-gray-100 dark:bg-gray-800",
+      message: "No members assigned to this item.",
+    };
+  }
 
   if (splitMethod.value === "percent") {
-    if (Math.abs(total - 1) < Epsilon)
+    // Handle zero cost items specially
+    if (cost === 0) {
+      // For zero cost items, don't show validation warnings since percentages don't matter
+      return {
+        class: "bg-gray-100 dark:bg-gray-800",
+        message: "Item has no cost - percentages don't affect the total.",
+      };
+    }
+
+    // Normal percentage validation for non-zero cost items
+    if (Math.abs(total - 1) < Epsilon) {
       return {
         class: "bg-green-100 dark:bg-green-900/50",
         message: "Perfect! Total is 100%.",
       };
-    if (total > 1)
+    }
+    if (total > 1) {
       return {
         class: "bg-red-100 dark:bg-red-900/50",
         message: "Total exceeds 100%.",
       };
+    }
+
     return {
       class: "bg-yellow-100 dark:bg-yellow-900/50",
       message: "Total is less than 100%.",
     };
   } else {
-    if (Math.abs(total - cost) < Epsilon)
+    // Amount validation
+    if (Math.abs(total - cost) < Epsilon) {
       return {
         class: "bg-green-100 dark:bg-green-900/50",
         message: "Perfect! Total matches item cost.",
       };
-    if (total > cost)
+    }
+
+    if (total > cost) {
       return {
         class: "bg-red-100 dark:bg-red-900/50",
         message: "Total exceeds item cost.",
       };
+    }
+
     return {
       class: "bg-yellow-100 dark:bg-yellow-900/50",
       message: "Total is less than item cost.",
@@ -446,124 +525,91 @@ const isOpen = computed({
 });
 
 async function handleManageMembersClick() {
-  const savedSuccessfully = await handleSave();
-  if (savedSuccessfully) {
-    emit("open-member-drawer");
-  }
+  await handleSave();
+  emit("open-member-drawer");
 }
 
-const handleSave = async (): Promise<boolean> => {
-  if (props.fieldIndex === undefined) return false;
-
-  // Check if item ID exists and convert to string
-  const itemId = props.item.id;
-  if (!itemId) {
-    toast.add({
-      title: "Cannot Save",
-      description: "Item ID is missing. Please try again.",
-      color: "red",
-      icon: "i-heroicons-x-circle",
-    });
-    return false;
-  }
+const handleSave = async () => {
+  if (!props.receiptId) return;
 
   const total = totalAmount.value;
   const cost = formState.value.cost;
+  const hasAssignments = formState.value.assignments.length > 0;
   let isValid = true;
   let errorMessage = "";
+  const Epsilon = 0.01; // Same tolerance as validation
 
-  if (splitMethod.value === "percent" && Math.abs(total - 1) > 0.01) {
-    isValid = false;
-    errorMessage = "Total percentage must be exactly 100%.";
-  } else if (splitMethod.value === "amount" && Math.abs(total - cost) > 0.01) {
-    isValid = false;
-    errorMessage = "Total amount must exactly match the item cost.";
+  // Only validate totals if there are assignments
+  if (hasAssignments) {
+    if (splitMethod.value === "percent") {
+      // Skip validation for zero cost items since percentages don't matter
+      if (cost > 0 && Math.abs(total - 1) > Epsilon) {
+        isValid = false;
+        errorMessage = "Total percentage must be exactly 100%.";
+      }
+    } else if (
+      splitMethod.value === "amount" &&
+      Math.abs(total - cost) > Epsilon
+    ) {
+      isValid = false;
+      errorMessage = "Total amount must exactly match the item cost.";
+    }
   }
 
   if (!isValid) {
     toast.add({
       title: "Cannot Save",
       description: errorMessage,
-      color: "red",
+      color: "error",
       icon: "i-heroicons-x-circle",
     });
-    return false;
+    return;
   }
 
   isSaving.value = true;
 
   try {
-    // Create a deep copy to work with, ensuring the drawer's state isn't mutated prematurely.
-    const itemToSave = JSON.parse(JSON.stringify(formState.value));
+    // Create a deep copy to work with, preserving the original ID
+    const itemToSave = {
+      ...JSON.parse(JSON.stringify(formState.value)),
+      id: props.item.id, // Preserve the original item ID
+    };
 
-    // The big simplification: The data is now stored in a consistent format that
-    // mirrors the database schema. When the UI is in 'percent' (percentage) mode,
-    // we just need to convert the percentage value back to a currency amount before saving.
+    // Convert UI values to database format
     if (splitMethod.value === "percent") {
       itemToSave.assignments.forEach((a: ReceiptItemAssignmentForm) => {
-        // The method is already 'percent', we just convert the UI value (percentage)
-        // back to the final currency amount for storage.
+        // Convert percentage to currency amount for storage
         const calculatedAmount = (a.value ?? 0) * itemToSave.cost;
-        // Round to 2 decimal places to prevent floating point precision issues
         a.value = Math.round(calculatedAmount * 100) / 100;
-        // We could also set numerator/denominator here for the backend if needed.
       });
     }
-    // No 'else' block needed. If the method is 'amount', the value is already a currency amount.
 
-    // Save to local form state
-    emit("save", props.fieldIndex, itemToSave);
+    // Ensure all assignments have an id
+    itemToSave.assignments.forEach((a: any) => {
+      if (!a.id) a.id = uuid();
+    });
 
-    // Transform the form data to match the database schema and save to Supabase
-    const assignmentsToSave = itemToSave.assignments.map(
-      (assignment: ReceiptItemAssignmentForm) => {
-        let calculatedAmount: number;
+    // Update the receipt item title and cost first
+    updateReceiptItem(props.item.id, {
+      title: itemToSave.title,
+      cost: itemToSave.cost,
+    });
 
-        if (splitMethod.value === "percent") {
-          // Convert percentage to calculated amount
-          calculatedAmount =
-            Math.round((assignment.value ?? 0) * itemToSave.cost * 100) / 100;
-        } else {
-          // Amount mode - value is already the calculated amount
-          calculatedAmount = assignment.value ?? 0;
-        }
-
-        return {
-          id: assignment?.id ?? uuid(), // Preserve ID if it exists, generate new one if it doesn't
-          receipt_item_id: itemId.toString(), // Convert to string for UUID
-          user_name: assignment.user_name,
-          method: assignment.method,
-          value: assignment.value,
-          calculated_amount: calculatedAmount,
-        };
-      }
+    // Then update assignments (this triggers cache invalidation automatically)
+    updateAssignments(
+      props.item.id,
+      itemToSave.assignments,
+      currentAssignments.value
     );
 
-    // Save to Supabase
-    // All assignments should now have IDs (generated when created)
-    // Use upsert for all assignments to handle both new and existing ones
-    if (assignmentsToSave.length > 0) {
-      const { error: upsertError } = await supabase
-        .from("receipt_item_assignments")
-        .upsert(assignmentsToSave, {
-          onConflict: "id",
-        });
-
-      if (upsertError) {
-        throw upsertError;
-      }
-    }
-
     emit("close");
-    return true;
   } catch (error) {
     toast.add({
       title: "Error",
-      description: "Failed to save to database. Please try again.",
-      color: "red",
+      description: "Failed to save item. Please try again.",
+      color: "error",
       icon: "i-heroicons-x-circle",
     });
-    return false;
   } finally {
     isSaving.value = false;
   }
