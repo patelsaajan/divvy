@@ -26,7 +26,7 @@ pnpm dev
 
 ## Todo
 
-- [ ] Upload members to supabase table
+- [x] Upload members to supabase table
 - [ ] Update settings page
 - [ ] Currency conversion based on manual / current exchange rate and extracted currency from receipt
 - [ ] Take a picture of the receipt through the app
