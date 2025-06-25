@@ -528,7 +528,6 @@ const modalDeleteConfirmation = overlay.create(ModalsConfirmation, {
       console.log("close");
     },
   },
-  destroyOnClose: true,
   });
 
 const handleDeleteItem = (index: number) => {
