@@ -1,5 +1,5 @@
 <template>
-  <template v-if="!loading">
+  <template v-if="!receiptsLoading">
     <PageHeader title="Your Receipts">
       <template #action>
         <UButton :to="paths.upload" variant="ghost">
@@ -75,5 +75,5 @@ import { formatCurrency } from "~~/utils/currency";
 import { formatDate } from "~~/utils/formatDate";
 import { paths } from "~~/utils/paths";
 
-const { receipts, loading, error, refresh } = useReceipts();
+const { receipts, receiptsLoading } = useReceipts();
 </script>
