@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import type { Database } from "~~/types/database.types";
+import { tables } from "~~/utils/tables";
 
 // Type aliases for better readability
 type Receipt = Database["public"]["Tables"]["receipts"]["Row"];
@@ -14,12 +15,12 @@ export const useReceipt = (id: string) => {
 
   // Query for receipt data
   const receiptQuery = useQuery({
-    queryKey: ["receipt", id],
+    queryKey: [tables.receipts, id],
     queryFn: async (): Promise<Receipt> => {
       if (!user.value) throw new Error("No user");
 
       const { data, error } = await client
-        .from("receipts")
+        .from(tables.receipts)
         .select("*")
         .eq("id", id)
         .eq("user_id", user.value.id)
@@ -35,7 +36,7 @@ export const useReceipt = (id: string) => {
   const createReceiptMutation = useMutation({
     mutationFn: async (receiptData: ReceiptInsert): Promise<Receipt> => {
       const { data, error } = await client
-        .from("receipts")
+        .from(tables.receipts)
         .insert(receiptData)
         .select()
         .single();
@@ -44,8 +45,7 @@ export const useReceipt = (id: string) => {
       return data;
     },
     onSuccess: () => {
-      // Invalidate receipts list query if it exists
-      queryClient.invalidateQueries({ queryKey: ["receipts"] });
+      queryClient.invalidateQueries({ queryKey: [tables.receipts, id] });
     },
     onError: (error: Error) => {
       toast.add({
@@ -61,14 +61,14 @@ export const useReceipt = (id: string) => {
   const updateReceiptMutation = useMutation({
     mutationFn: async (updates: ReceiptUpdate): Promise<void> => {
       const { error } = await client
-        .from("receipts")
+        .from(tables.receipts)
         .update(updates)
         .eq("id", id);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["receipt", id] });
+      queryClient.invalidateQueries({ queryKey: [tables.receipts, id] });
     },
     onError: (error: Error) => {
       toast.add({
@@ -83,12 +83,15 @@ export const useReceipt = (id: string) => {
   // Mutation for deleting receipt
   const deleteReceiptMutation = useMutation({
     mutationFn: async (): Promise<void> => {
-      const { error } = await client.from("receipts").delete().eq("id", id);
+      const { error } = await client
+        .from(tables.receipts)
+        .delete()
+        .eq("id", id);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["receipt", id] });
+      queryClient.invalidateQueries({ queryKey: [tables.receipts, id] });
     },
     onError: (error: Error) => {
       toast.add({

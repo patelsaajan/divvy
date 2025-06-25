@@ -110,7 +110,7 @@ const handleAddPerson = async () => {
   }
 };
 
-const handleRemoveMember = async (id: string | number) => {
+const handleRemoveMember = async (id: string) => {
   if (removingMemberId.value === id) return;
 
   removingMemberId.value = id;

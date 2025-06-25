@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { v4 as uuid } from "uuid";
 import type { Database } from "~~/types/database.types";
 import type { ReceiptItemAssignmentForm } from "~~/types/receipts";
+import { tables } from "~~/utils/tables";
 
 // Database assignment type
 export type DbAssignment =
@@ -23,10 +24,10 @@ export const useReceiptItemAssignments = (receiptId: string) => {
   const queryClient = useQueryClient();
 
   const assignmentsQuery = useQuery({
-    queryKey: ["receipt-assignments", receiptId],
+    queryKey: [tables.receiptItemAssignments, receiptId],
     queryFn: async (): Promise<Record<string, ReceiptItemAssignmentForm[]>> => {
       const { data: receiptItems, error: itemsError } = await client
-        .from("receipt_items")
+        .from(tables.receiptItems)
         .select("id")
         .eq("receipt_id", receiptId);
 
@@ -36,7 +37,7 @@ export const useReceiptItemAssignments = (receiptId: string) => {
       const itemIds = receiptItems.map((item) => item.id);
 
       const { data: assignments, error: assignmentsError } = await client
-        .from("receipt_item_assignments")
+        .from(tables.receiptItemAssignments)
         .select("*")
         .in("receipt_item_id", itemIds);
 
@@ -78,19 +79,13 @@ export const useReceiptItemAssignments = (receiptId: string) => {
         .filter((a) => a.id && !newAssignmentIds.has(a.id))
         .map((a) => a.id);
 
-      console.log("previousAssignments", previousAssignments);
-      console.log("newAssignments", newAssignments);
-      console.log("assignmentsToDelete", assignmentsToDelete);
-
       // 1. Delete assignments that are not in the new set
       if (assignmentsToDelete.length > 0) {
         const { error: deleteError } = await client
-          .from("receipt_item_assignments")
+          .from(tables.receiptItemAssignments)
           .delete()
           .in("id", assignmentsToDelete)
           .eq("receipt_item_id", itemId);
-
-        console.log("deleteError", deleteError);
 
         if (deleteError) throw deleteError;
       }
@@ -107,15 +102,16 @@ export const useReceiptItemAssignments = (receiptId: string) => {
         }));
 
         const { error: upsertError } = await client
-          .from("receipt_item_assignments")
+          .from(tables.receiptItemAssignments)
           .upsert(toUpsert, { onConflict: "id" });
 
         if (upsertError) throw upsertError;
       }
-
-      // Invalidate query
+    },
+    onSuccess: () => {
+      // Invalidate query to refresh the data
       queryClient.invalidateQueries({
-        queryKey: ["receipt-item-assignments", receiptId],
+        queryKey: [tables.receiptItemAssignments, receiptId],
       });
     },
     onError: (error: Error) => {
@@ -137,13 +133,15 @@ export const useReceiptItemAssignments = (receiptId: string) => {
       assignmentId: string;
     }) => {
       const { error } = await client
-        .from("receipt_item_assignments")
+        .from(tables.receiptItemAssignments)
         .delete()
         .eq("id", assignmentId)
         .eq("receipt_item_id", itemId);
+
       if (error) throw error;
+
       queryClient.invalidateQueries({
-        queryKey: ["receipt-item-assignments", receiptId],
+        queryKey: [tables.receiptItemAssignments, receiptId],
       });
     },
     onError: (error: Error) => {

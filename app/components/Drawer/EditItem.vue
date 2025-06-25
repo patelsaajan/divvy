@@ -247,6 +247,7 @@ import { v4 as uuid } from "uuid";
 import { computed, ref, watch } from "vue";
 import { useMembers } from "~/composables/useMembers";
 import { useReceiptItemAssignments } from "~/composables/useReceiptItemAssignments";
+import { useReceiptItems } from "~/composables/useReceiptItems";
 import type {
   ReceiptItemAssignmentForm,
   ReceiptItemForm,
@@ -273,19 +274,16 @@ const emit = defineEmits<{
 const toast = useToast();
 const isSaving = ref(false);
 
-// Use the composables
 const { members } = useMembers();
-// Use the new assignment composable with the item ID
 const { updateAssignments } = useReceiptItemAssignments(props.item.id);
+const { updateReceiptItem } = useReceiptItems(props.receiptId!);
 
 const formState = ref<ReceiptItemForm>(JSON.parse(JSON.stringify(props.item)));
 
 const splitMethod = ref<"percent" | "amount">("percent");
 
-// Get assignments for this specific item
 const currentAssignments = computed(() => {
   if (!props.item.id) return [];
-  // Get assignments from the parent component's form state
   return props.item.assignments || [];
 });
 
@@ -592,6 +590,12 @@ const handleSave = async () => {
     // Ensure all assignments have an id
     itemToSave.assignments.forEach((a: any) => {
       if (!a.id) a.id = uuid();
+    });
+
+    // Update the receipt item title and cost
+    updateReceiptItem(props.item.id, {
+      title: itemToSave.title,
+      cost: itemToSave.cost,
     });
 
     // Use the composable directly to save to database

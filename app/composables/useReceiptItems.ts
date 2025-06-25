@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import type { Database } from "~~/types/database.types";
+import { tables } from "~~/utils/tables";
 
 // Type aliases for better readability
 type ReceiptItem = Database["public"]["Tables"]["receipt_items"]["Row"];
@@ -16,17 +17,18 @@ export const useReceiptItems = (receiptId: string) => {
 
   // Query for receipt items
   const receiptItemsQuery = useQuery({
-    queryKey: ["receipt-items", receiptId],
+    queryKey: [tables.receiptItems, receiptId],
     queryFn: async (): Promise<ReceiptItem[]> => {
       if (!user.value) throw new Error("No user");
 
       const { data, error } = await client
-        .from("receipt_items")
+        .from(tables.receiptItems)
         .select("*")
         .eq("receipt_id", receiptId)
         .order("created_at", { ascending: true });
 
       if (error) throw error;
+
       return data;
     },
     enabled: !!user.value && !!receiptId,
@@ -34,10 +36,22 @@ export const useReceiptItems = (receiptId: string) => {
 
   // Mutation for creating receipt item
   const createReceiptItemMutation = useMutation({
-    mutationFn: async (itemData: ReceiptItemInsert): Promise<ReceiptItem> => {
+    mutationFn: async ({
+      title,
+      cost,
+      receipt_id,
+    }: {
+      title: string;
+      cost: number;
+      receipt_id: string;
+    }): Promise<ReceiptItem> => {
       const { data, error } = await client
-        .from("receipt_items")
-        .insert(itemData)
+        .from(tables.receiptItems)
+        .insert({
+          title,
+          cost,
+          receipt_id,
+        })
         .select()
         .single();
 
@@ -45,7 +59,9 @@ export const useReceiptItems = (receiptId: string) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["receipt-items", receiptId] });
+      queryClient.invalidateQueries({
+        queryKey: [tables.receiptItems, receiptId],
+      });
     },
     onError: (error: Error) => {
       toast.add({
@@ -57,7 +73,6 @@ export const useReceiptItems = (receiptId: string) => {
     },
   });
 
-  // TODO: this is not being called when the item is updated - cannot change cost or title
   // Mutation for updating receipt item
   const updateReceiptItemMutation = useMutation({
     mutationFn: async ({
@@ -68,14 +83,16 @@ export const useReceiptItems = (receiptId: string) => {
       updates: ReceiptItemUpdate;
     }): Promise<void> => {
       const { error } = await client
-        .from("receipt_items")
+        .from(tables.receiptItems)
         .update(updates)
         .eq("id", id);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["receipt-items", receiptId] });
+      queryClient.invalidateQueries({
+        queryKey: [tables.receiptItems, receiptId],
+      });
     },
     onError: (error: Error) => {
       toast.add({
@@ -91,14 +108,16 @@ export const useReceiptItems = (receiptId: string) => {
   const deleteReceiptItemMutation = useMutation({
     mutationFn: async (itemId: string): Promise<void> => {
       const { error } = await client
-        .from("receipt_items")
+        .from(tables.receiptItems)
         .delete()
         .eq("id", itemId);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["receipt-items", receiptId] });
+      queryClient.invalidateQueries({
+        queryKey: [tables.receiptItems, receiptId],
+      });
     },
     onError: (error: Error) => {
       toast.add({

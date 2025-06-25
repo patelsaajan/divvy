@@ -393,6 +393,7 @@ const totalCost = computed(() => {
     .toFixed(2);
 });
 
+// TODO: members in the dropdown cannot be checked/unchecked
 const memberItems = computed(() => {
   const items: DropdownMenuItem[] = [
     {

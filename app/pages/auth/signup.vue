@@ -206,7 +206,7 @@ const signUpWithOtp = async () => {
   const { error } = await supabase.auth.signInWithOtp({
     email: email.value,
     options: {
-      emailRedirectTo: config.public.supabaseRedirectUrl as string,
+      emailRedirectTo: config.public.supabaseRedirectUrl,
       data: {
         display_name: name.value,
       },

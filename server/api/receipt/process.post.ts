@@ -1,7 +1,9 @@
 import { serverSupabaseClient } from "#supabase/server";
 import { v4 as uuid } from "uuid";
+import { Database, Json } from "~~/types/database.types";
 import { ReceiptItemSchema, ReceiptSchema } from "~~/types/receipts";
 import { mindee, mindeeClient } from "~~/utils/mindee";
+import { tables } from "~~/utils/tables";
 
 const getFileExtension = (fileName: string) => {
   return (
@@ -19,21 +21,20 @@ function parseMindeeResponse(
   const { prediction } = mindeeResponse.document.inference;
 
   // Parse receipt data
-  const receipt: Omit<ReceiptSchema, "uploaded_at"> = {
+  const receipt: ReceiptSchema = {
     id: receiptId,
     storage_path: storagePath,
     total_cost: prediction.totalAmount.value ?? 0,
     currency: prediction.locale.currency ?? "GBP",
-    raw_json: mindeeResponse,
+    raw_json: mindeeResponse as unknown as Json,
     title: null,
     emoji: null,
     vendor: prediction.supplierName.value ?? null,
-    country_code: prediction.locale.country ?? 'GB',
+    country_code: prediction.locale.country ?? "GB",
     locale: prediction.locale.value ?? "en-GB",
     user_id: userId,
   };
 
-  // Parse line items
   const items: ReceiptItemSchema[] =
     prediction.lineItems?.map((item, index) => ({
       receipt_id: receiptId,
@@ -46,9 +47,11 @@ function parseMindeeResponse(
 
 export default defineEventHandler(async (event) => {
   const formData = await readMultipartFormData(event);
-  const supabase = await serverSupabaseClient(event);
+  const supabase = await serverSupabaseClient<Database>(event);
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const file = formData?.find((item) => item.type === "image/jpeg");
   if (!file) {
@@ -113,11 +116,11 @@ export default defineEventHandler(async (event) => {
 
   // Upload the parsed response to Supabase
   const { error: insertError } = await supabase
-    .from("receipts")
-    .insert(receipt as any);
+    .from(tables.receipts)
+    .insert(receipt);
   const { error: insertItemsError } = await supabase
-    .from("receipt_items")
-    .insert(items as any);
+    .from(tables.receiptItems)
+    .insert(items);
 
   if (insertError) {
     return createError({
