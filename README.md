@@ -33,3 +33,4 @@ pnpm dev
 - [ ] Loading states and error handling across the app
 - [ ] Filter / sort receipts by date, amount, locale, etc.
 - [ ] Allow users to edit the title, vendor, and amount of a receipt
+- [ ] Allow manual creation of a new receipt (maybe change the upload to create?)
