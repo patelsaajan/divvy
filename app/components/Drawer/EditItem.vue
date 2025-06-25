@@ -276,7 +276,6 @@ const isSaving = ref(false);
 // Use the composables
 const { members } = useMembers();
 // Use the new assignment composable with the item ID
-console.log("Item ID:", props.item.id);
 const { updateAssignments } = useReceiptItemAssignments(props.item.id);
 
 const formState = ref<ReceiptItemForm>(JSON.parse(JSON.stringify(props.item)));
@@ -542,9 +541,6 @@ async function handleManageMembersClick() {
 const handleSave = async () => {
   if (!props.receiptId) return;
 
-  console.log("handleSave called with item ID:", props.item.id);
-  console.log("Form state assignments:", formState.value.assignments);
-
   const total = totalAmount.value;
   const cost = formState.value.cost;
   const hasAssignments = formState.value.assignments.length > 0;
@@ -584,8 +580,6 @@ const handleSave = async () => {
       id: props.item.id, // Preserve the original item ID
     };
 
-    console.log("Item to save before conversion:", itemToSave);
-
     // Convert UI values to database format
     if (splitMethod.value === "percent") {
       itemToSave.assignments.forEach((a: ReceiptItemAssignmentForm) => {
@@ -600,16 +594,15 @@ const handleSave = async () => {
       if (!a.id) a.id = uuid();
     });
 
-    console.log("Item to save after conversion:", itemToSave);
-    console.log("Assignments to save:", itemToSave.assignments);
-
     // Use the composable directly to save to database
-    updateAssignments(itemToSave.assignments);
-    console.log("updateAssignments completed successfully");
+    updateAssignments(
+      props.item.id,
+      itemToSave.assignments,
+      currentAssignments.value
+    );
 
     emit("close");
   } catch (error) {
-    console.error("Save error:", error);
     toast.add({
       title: "Error",
       description: "Failed to save item. Please try again.",

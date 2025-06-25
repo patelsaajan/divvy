@@ -17,87 +17,106 @@ const dbToFormAssignment = (
   value: dbAssignment.value,
 });
 
-export const useReceiptItemAssignments = (receiptItemId: string) => {
+export const useReceiptItemAssignments = (receiptId: string) => {
   const client = useSupabaseClient<Database>();
   const toast = useToast();
   const queryClient = useQueryClient();
 
   const assignmentsQuery = useQuery({
-    queryKey: ["receipt-item-assignments", receiptItemId],
-    queryFn: async (): Promise<ReceiptItemAssignmentForm[]> => {
-      const { data, error } = await client
+    queryKey: ["receipt-assignments", receiptId],
+    queryFn: async (): Promise<Record<string, ReceiptItemAssignmentForm[]>> => {
+      const { data: receiptItems, error: itemsError } = await client
+        .from("receipt_items")
+        .select("id")
+        .eq("receipt_id", receiptId);
+
+      if (itemsError) throw itemsError;
+      if (!receiptItems) return {};
+
+      const itemIds = receiptItems.map((item) => item.id);
+
+      const { data: assignments, error: assignmentsError } = await client
         .from("receipt_item_assignments")
         .select("*")
-        .eq("receipt_item_id", receiptItemId)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      return (data || []).map(dbToFormAssignment);
+        .in("receipt_item_id", itemIds);
+
+      if (assignmentsError) throw assignmentsError;
+      if (!assignments) return {};
+
+      // Group assignments by receipt item ID
+      const assignmentMap: Record<string, ReceiptItemAssignmentForm[]> = {};
+      assignments.forEach((assignment) => {
+        if (!assignmentMap[assignment.receipt_item_id]) {
+          assignmentMap[assignment.receipt_item_id] = [];
+        }
+        assignmentMap[assignment.receipt_item_id]!.push(
+          dbToFormAssignment(assignment)
+        );
+      });
+
+      return assignmentMap;
     },
-    enabled: !!receiptItemId,
+    enabled: !!receiptId,
   });
 
   const updateAssignmentsMutation = useMutation({
-    mutationFn: async (newAssignments: ReceiptItemAssignmentForm[]) => {
-      console.log("Starting assignment update for item:", receiptItemId);
-      console.log("New assignments to save:", newAssignments);
-
-      // Use existing assignments from query data, filtered for current receipt item ID
-      const existingAssignments = assignmentsQuery.data.value || [];
-      console.log("Existing assignments from DB:", existingAssignments);
-
-      const existingMap = new Map(existingAssignments.map((a) => [a.id, a]));
-      const newMap = new Map(
-        newAssignments.filter((a) => a.id).map((a) => [a.id!, a])
+    mutationFn: async ({
+      itemId,
+      previousAssignments,
+      newAssignments,
+    }: {
+      itemId: string;
+      previousAssignments: ReceiptItemAssignmentForm[];
+      newAssignments: ReceiptItemAssignmentForm[];
+    }) => {
+      // Find assignments to delete by comparing IDs
+      const newAssignmentIds = new Set(
+        newAssignments.filter((a) => a.id).map((a) => a.id)
       );
 
-      // 1. Deleted: In DB but not in new list
-      const toDelete = Array.from(existingMap.keys()).filter(
-        (id) => !newMap.has(id)
-      );
-      console.log("Assignments to delete:", toDelete);
+      const assignmentsToDelete = previousAssignments
+        .filter((a) => a.id && !newAssignmentIds.has(a.id))
+        .map((a) => a.id);
 
-      if (toDelete.length > 0) {
+      console.log("previousAssignments", previousAssignments);
+      console.log("newAssignments", newAssignments);
+      console.log("assignmentsToDelete", assignmentsToDelete);
+
+      // 1. Delete assignments that are not in the new set
+      if (assignmentsToDelete.length > 0) {
         const { error: deleteError } = await client
           .from("receipt_item_assignments")
           .delete()
-          .in("id", toDelete);
-        if (deleteError) {
-          console.error("Delete error:", deleteError);
-          throw deleteError;
-        }
-        console.log("Successfully deleted assignments");
+          .in("id", assignmentsToDelete)
+          .eq("receipt_item_id", itemId);
+
+        console.log("deleteError", deleteError);
+
+        if (deleteError) throw deleteError;
       }
 
-      // 2. Upsert: New or updated assignments
-      const toUpsert = newAssignments.map((assignment) => {
-        const assignmentId = assignment.id || uuid();
-        return {
-          id: assignmentId,
-          receipt_item_id: receiptItemId,
+      // 2. Upsert all new assignments
+      if (newAssignments.length > 0) {
+        const toUpsert = newAssignments.map((assignment) => ({
+          id: assignment.id || uuid(),
+          receipt_item_id: itemId,
           user_name: assignment.user_name,
           method: assignment.method,
           value: assignment.value ?? 0,
-          calculated_amount: assignment.value ?? 0, // For now
-        };
-      });
-      console.log("Assignments to upsert:", toUpsert);
+          calculated_amount: assignment.value ?? 0,
+        }));
 
-      if (toUpsert.length > 0) {
         const { error: upsertError } = await client
           .from("receipt_item_assignments")
           .upsert(toUpsert, { onConflict: "id" });
-        if (upsertError) {
-          console.error("Upsert error:", upsertError);
-          throw upsertError;
-        }
-        console.log("Successfully upserted assignments");
+
+        if (upsertError) throw upsertError;
       }
 
       // Invalidate query
       queryClient.invalidateQueries({
-        queryKey: ["receipt-item-assignments", receiptItemId],
+        queryKey: ["receipt-item-assignments", receiptId],
       });
-      console.log("Query invalidated successfully");
     },
     onError: (error: Error) => {
       toast.add({
@@ -110,15 +129,21 @@ export const useReceiptItemAssignments = (receiptItemId: string) => {
   });
 
   const deleteAssignmentMutation = useMutation({
-    mutationFn: async (assignmentId: string) => {
+    mutationFn: async ({
+      itemId,
+      assignmentId,
+    }: {
+      itemId: string;
+      assignmentId: string;
+    }) => {
       const { error } = await client
         .from("receipt_item_assignments")
         .delete()
         .eq("id", assignmentId)
-        .eq("receipt_item_id", receiptItemId);
+        .eq("receipt_item_id", itemId);
       if (error) throw error;
       queryClient.invalidateQueries({
-        queryKey: ["receipt-item-assignments", receiptItemId],
+        queryKey: ["receipt-item-assignments", receiptId],
       });
     },
     onError: (error: Error) => {
@@ -132,24 +157,28 @@ export const useReceiptItemAssignments = (receiptItemId: string) => {
   });
 
   // Helper functions
-  const updateAssignments = (newAssignments: ReceiptItemAssignmentForm[]) => {
-    return updateAssignmentsMutation.mutate(newAssignments);
+  const updateAssignments = (
+    itemId: string,
+    newAssignments: ReceiptItemAssignmentForm[],
+    previousAssignments: ReceiptItemAssignmentForm[]
+  ) => {
+    return updateAssignmentsMutation.mutate({
+      itemId,
+      previousAssignments,
+      newAssignments,
+    });
   };
 
-  const deleteAssignment = (assignmentId: string) => {
-    return deleteAssignmentMutation.mutate(assignmentId);
-  };
-
-  const refetch = () => {
-    assignmentsQuery.refetch();
+  const deleteAssignment = (itemId: string, assignmentId: string) => {
+    return deleteAssignmentMutation.mutate({ itemId, assignmentId });
   };
 
   return {
     // Assignments data
-    assignments: assignmentsQuery.data,
+    assignmentsMap: assignmentsQuery.data,
     assignmentsLoading: assignmentsQuery.isLoading,
     assignmentsError: assignmentsQuery.error,
-    assignmentsRefresh: refetch,
+    assignmentsRefresh: () => assignmentsQuery.refetch(),
 
     // Update
     updateAssignments,

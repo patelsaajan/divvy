@@ -22,12 +22,7 @@ export const useReceiptItems = (receiptId: string) => {
 
       const { data, error } = await client
         .from("receipt_items")
-        .select(
-          `
-          *,
-          receipt_item_assignments(*)
-        `
-        )
+        .select("*")
         .eq("receipt_id", receiptId)
         .order("created_at", { ascending: true });
 
@@ -62,6 +57,7 @@ export const useReceiptItems = (receiptId: string) => {
     },
   });
 
+  // TODO: this is not being called when the item is updated - cannot change cost or title
   // Mutation for updating receipt item
   const updateReceiptItemMutation = useMutation({
     mutationFn: async ({

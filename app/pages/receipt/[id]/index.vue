@@ -269,10 +269,17 @@ const {
   deleteReceiptItem,
 } = useReceiptItems(id);
 
+const { assignmentsMap, assignmentsLoading, updateAssignments } =
+  useReceiptItemAssignments(id);
+
 // Computed properties for compatibility
 const loading = computed(
-  () => receiptLoading.value || receiptItemsLoading.value
+  () =>
+    receiptLoading.value ||
+    receiptItemsLoading.value ||
+    assignmentsLoading.value
 );
+
 const receiptStatus = computed(() => {
   if (loading.value) return "loading";
   if (receipt.value && receiptItems.value) return "success";
@@ -293,13 +300,11 @@ const receiptItemsWithAssignments = computed(() => {
   if (!receiptItems.value) return [];
 
   return receiptItems.value.map((item: any) => {
-    // Assignments now come loaded with the receipt items
-    const assignments = item.receipt_item_assignments || [];
     return {
       id: item.id,
       title: item.title,
       cost: item.cost,
-      assignments: assignments,
+      assignments: assignmentsMap.value?.[item.id] || [],
     };
   });
 });
@@ -459,9 +464,11 @@ const assignMembersToItemHandler = async (idx: number) => {
   if (!currentItem) return;
 
   const updatedItem = assignMembersToItem(currentItem, selectedMembers);
-
-  const { updateAssignments } = useReceiptItemAssignments(currentItem.id);
-  updateAssignments(updatedItem.assignments);
+  updateAssignments(
+    currentItem.id,
+    updatedItem.assignments,
+    currentItem.assignments || []
+  );
 };
 
 const handleAddItem = () => {
