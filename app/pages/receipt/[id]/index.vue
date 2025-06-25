@@ -253,9 +253,11 @@ import type {
 } from "~~/types/receipts";
 import { distributeAmountEvenly, formatCurrency } from "~~/utils/currency";
 import { formatDate } from "~~/utils/formatDate";
+import { ModalsConfirmation } from '#components'
 
-const route = useRoute();
-const toast = useToast();
+const route   = useRoute();
+const toast   = useToast();
+const overlay = useOverlay();
 
 // Get the route parameter
 const id = route.params.id as string;
@@ -429,7 +431,6 @@ const memberItems = computed(() => {
   if (members.value.length > 0) {
     items.push({ type: "separator" });
   }
-
   items.push(
     ...(members.value.map((member) => ({
       label: member.name,
@@ -518,11 +519,29 @@ const handleAddItem = () => {
   createReceiptItem("New Item", 0);
 };
 
+const modalDeleteConfirmation = overlay.create(ModalsConfirmation, {
+  props: {
+    title      : "Delete Item",
+    confirmText: "Delete",
+    cancelText: "Cancel",
+    close: () => {
+      console.log("close");
+    },
+  },
+  destroyOnClose: true,
+  });
+
 const handleDeleteItem = (index: number) => {
   const itemToDelete = receiptItemsWithAssignments.value[index];
   if (!itemToDelete) return;
 
-  deleteReceiptItem(itemToDelete.id);
+  modalDeleteConfirmation.open({
+    text       :  `Are you sure you want to delete ${itemToDelete.title}? This action cannot be undone.`,
+    onConfirm  : () => {
+      modalDeleteConfirmation.close();
+      deleteReceiptItem(itemToDelete.id);
+    }
+  });
 };
 
 const editItem = ref<ReceiptItemForm | null>(null);
