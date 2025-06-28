@@ -23,13 +23,3 @@ npm run dev
 # pnpm
 pnpm dev
 ```
-
-## Todo
-
-- [x] Upload members to supabase table
-- [ ] Update settings page
-- [ ] Currency conversion based on manual / current exchange rate and extracted currency from receipt
-- [ ] Take a picture of the receipt through the app
-- [ ] Loading states and error handling across the app
-- [ ] Filter / sort receipts by date, amount, locale, etc.
-- [ ] Allow users to edit the title, vendor, and amount of a receipt
