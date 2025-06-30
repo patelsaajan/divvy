@@ -182,8 +182,9 @@
           <!-- Receipt Actions -->
           <div class="flex space-x-2 mt-4 px-2">
             <UButton
+              variant="soft"
               icon="i-lucide-users"
-              class="flex-1 bg-gray-700 text-white py-2 rounded text-sm flex items-center justify-center cursor-pointer"
+              class="flex-1 text-white py-2 rounded text-sm flex items-center justify-center cursor-pointer"
               @click="memberDrawerOpen = true"
             >
               Members
@@ -199,8 +200,9 @@
           </div>
           <div class="flex justify-between items-center px-2">
             <UButton
+              variant="soft"
               icon="i-lucide-chart-bar"
-              class="flex-1 py-2 bg-gray-700 text-white rounded text-sm flex items-center justify-center cursor-pointer"
+              class="flex-1 py-2 text-white rounded text-sm flex items-center justify-center cursor-pointer"
               :to="`/summary/${id}`"
             >
               Summary
