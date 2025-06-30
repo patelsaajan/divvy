@@ -47,141 +47,143 @@
 </template>
 
 <script setup lang="ts">
-import { UTable, UButton, UAvatar } from '#components'
-import type { TableColumn } from '@nuxt/ui'
+import { UAvatar, UButton, UTable } from "#components";
+import type { TableColumn } from "@nuxt/ui";
+
+definePageMeta({ layout: false });
 
 const { id } = useRoute().params;
-const expanded = ref({ null: true })
+const expanded = ref({ null: true });
 
 type Item = {
-  name: string
-  price: number
-}
+  name: string;
+  price: number;
+};
 
 type Payment = {
-  name : string
-  items: Item[]
-  total: number
-  color: string
-}
+  name: string;
+  items: Item[];
+  total: number;
+  color: string;
+};
 
 const columns: TableColumn<Payment>[] = [
   {
-    id: 'avatar',
-    cell: ({ row }) => h(UAvatar, {
-      size: 'md',
-      alt: row.getValue('name') as string,
-      class: 'bg-blue-500/30'
-    })
+    id: "avatar",
+    cell: ({ row }) =>
+      h(UAvatar, {
+        size: "md",
+        alt: row.getValue("name") as string,
+        class: "bg-blue-500/30",
+      }),
   },
   {
-    accessorKey: 'name',
-    header: 'Name',
-    cell: ({ row }) => row.getValue('name')
+    accessorKey: "name",
+    header: "Name",
+    cell: ({ row }) => row.getValue("name"),
   },
   {
-    accessorKey: 'items',
-    header: 'Items',
-    cell: ({ row }) => (row.getValue('items') as Item[]).length
+    accessorKey: "items",
+    header: "Items",
+    cell: ({ row }) => (row.getValue("items") as Item[]).length,
   },
   {
-    accessorKey: 'total',
-    header: () => h('div', { class: 'text-right' }, 'Total'),
+    accessorKey: "total",
+    header: () => h("div", { class: "text-right" }, "Total"),
     cell: ({ row }) => {
-      const amount = Number.parseFloat(row.getValue('total'))
+      const amount = Number.parseFloat(row.getValue("total"));
 
-      const formatted = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'GBP'
-      }).format(amount)
+      const formatted = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "GBP",
+      }).format(amount);
 
-      return h('div', { class: 'text-right font-medium' }, formatted)
-    }
+      return h("div", { class: "text-right font-medium" }, formatted);
+    },
   },
   {
-    id: 'expand',
+    id: "expand",
     cell: ({ row }) =>
       h(UButton, {
-        color: 'neutral',
-        variant: 'ghost',
-        icon: 'i-lucide-chevron-down',
+        color: "neutral",
+        variant: "ghost",
+        icon: "i-lucide-chevron-down",
         square: true,
-        'aria-label': 'Expand',
+        "aria-label": "Expand",
         ui: {
           leadingIcon: [
-            'transition-transform',
-            row.getIsExpanded() ? 'duration-200 rotate-180' : ''
-          ]
+            "transition-transform",
+            row.getIsExpanded() ? "duration-200 rotate-180" : "",
+          ],
         },
-        onClick: () => row.toggleExpanded()
-      })
+        onClick: () => row.toggleExpanded(),
+      }),
   },
-]
-
+];
 
 const data = ref<Payment[]>([
   {
-    name: 'James Anderson',
-    total: 36.50,
-    color: 'bg-red-500',
+    name: "James Anderson",
+    total: 36.5,
+    color: "bg-red-500",
     items: [
       {
-        name: 'Pizza',
-        price: 10.00
+        name: "Pizza",
+        price: 10.0,
       },
       {
-        name: 'Pasta',
-        price: 10.00
-      }
-    ]
-  },
-  {
-    name: 'Mia White',
-    items: [
-      {
-        name: 'Pizza',
-        price: 10.00
-      },
-      {
-        name: 'Chilli',
-        price: 10.00
-      }
-    ],
-    total: 10.00,
-    color: 'bg-cyan-500'
-  },
-  {
-    name: 'William Brown',
-    items: [
-      {
-        name: 'Chopped Tomatoes',
-        price: 10.00
+        name: "Pasta",
+        price: 10.0,
       },
     ],
-    total: 19.20,
-    color: 'bg-blue-500'
   },
   {
-    name: 'Emma Davis',
+    name: "Mia White",
     items: [
       {
-        name: 'Item 1',
-        price: 10.00
-      }
+        name: "Pizza",
+        price: 10.0,
+      },
+      {
+        name: "Chilli",
+        price: 10.0,
+      },
     ],
-    total: 10.00,
-    color: 'bg-emerald-500'
+    total: 10.0,
+    color: "bg-cyan-500",
   },
   {
-    name: 'Ethan Harris',
+    name: "William Brown",
     items: [
       {
-        name: 'Item 1',
-        price: 10.00
-      }
+        name: "Chopped Tomatoes",
+        price: 10.0,
+      },
     ],
-    total: 10.00,
-    color: 'bg-amber-500'
-  }
-])
+    total: 19.2,
+    color: "bg-blue-500",
+  },
+  {
+    name: "Emma Davis",
+    items: [
+      {
+        name: "Item 1",
+        price: 10.0,
+      },
+    ],
+    total: 10.0,
+    color: "bg-emerald-500",
+  },
+  {
+    name: "Ethan Harris",
+    items: [
+      {
+        name: "Item 1",
+        price: 10.0,
+      },
+    ],
+    total: 10.0,
+    color: "bg-amber-500",
+  },
+]);
 </script>

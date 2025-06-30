@@ -254,14 +254,17 @@ import type {
 import { distributeAmountEvenly, formatCurrency } from "~~/utils/currency";
 import { formatDate } from "~~/utils/formatDate";
 
+definePageMeta({ layout: false });
+
 const route = useRoute();
 const toast = useToast();
+const { isMobile } = useDevice();
 
 // Get the route parameter
 const id = route.params.id as string;
 const memberDrawerOpen = ref(false);
 
-const { isMobile } = useDevice();
+const editItem = ref<ReceiptItemForm | null>(null);
 
 // Use the composables
 const { receipt, receiptLoading } = useReceipt(id);
@@ -524,6 +527,4 @@ const handleDeleteItem = (index: number) => {
 
   deleteReceiptItem(itemToDelete.id);
 };
-
-const editItem = ref<ReceiptItemForm | null>(null);
 </script>
