@@ -511,7 +511,12 @@ const assignMembersToItemHandler = async (idx: number) => {
 };
 
 const handleAddItem = () => {
-  createReceiptItem("New Item", 0);
+  const item = createReceiptItem("New Item", 0);
+
+  if (!item) return;
+
+  // Open edit item drawer
+  editItem.value = { ...item, assignments: [] };
 };
 
 const handleDeleteItem = (index: number) => {

@@ -3,6 +3,7 @@ export const paths = {
   settings: "/settings",
   upload: "/upload",
   receipt: (id: string) => `/receipt/${id}`,
+  summary: (id: string) => `/summary/${id}`,
   auth: {
     error: "/auth/error",
     confirm: "/auth/confirm",
