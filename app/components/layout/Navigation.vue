@@ -1,6 +1,6 @@
 <template>
   <nav
-    class="fixed bg-gray-800/80 backdrop-blur-lg py-2 px-4 border border-gray-700/50 z-30 rounded-full mx-auto bottom-5 right-1/2 translate-x-1/2"
+    class="fixed bg-gray-800/40 backdrop-blur-lg py-2 px-4 border border-gray-700/50 z-30 rounded-full mx-auto bottom-5 right-1/2 translate-x-1/2"
   >
     <div class="flex justify-around items-center gap-12">
       <NuxtLink
