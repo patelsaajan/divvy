@@ -1,17 +1,9 @@
 <template>
   <div class="container">
-    <div class="flex items-center mb-6">
-      <UButton
-        variant="link"
-        color="secondary"
-        class="p-2 mr-2 cursor-pointer"
-        @click="navigateTo(`/receipt/${id}`)"
-      >
-        <UIcon name="i-heroicons-chevron-left" :size="24" />
-        <span class="ml-2">Back</span>
-      </UButton>
-    </div>
+    <PageBackButton content="Back" :link="paths.home" />
+
     <PageHeader title="Summary" />
+
     <UTable
       v-model:expanded="expanded"
       :data="data"
@@ -49,10 +41,10 @@
 <script setup lang="ts">
 import { UAvatar, UButton, UTable } from "#components";
 import type { TableColumn } from "@nuxt/ui";
+import { paths } from "~~/utils/paths";
 
 definePageMeta({ layout: false });
 
-const { id } = useRoute().params;
 const expanded = ref({ null: true });
 
 type Item = {

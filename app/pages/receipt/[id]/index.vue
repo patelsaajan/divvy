@@ -1,17 +1,7 @@
 <template>
   <template v-if="receiptStatus === 'success'">
-    <div class="container mx-auto mt-6">
-      <div class="flex items-center mb-6">
-        <UButton
-          variant="link"
-          color="secondary"
-          class="p-2 mr-2 cursor-pointer"
-          @click="navigateTo('/')"
-        >
-          <UIcon name="i-heroicons-chevron-left" :size="24" />
-          <span class="ml-2">Receipts</span>
-        </UButton>
-      </div>
+    <div class="container mx-auto">
+      <PageBackButton content="Receipts" :link="paths.home" class="mb-6" />
 
       <div class="bg-gray-800 rounded-lg p-4 mb-4">
         <div class="flex items-center justify-between">
@@ -253,6 +243,7 @@ import type {
 } from "~~/types/receipts";
 import { distributeAmountEvenly, formatCurrency } from "~~/utils/currency";
 import { formatDate } from "~~/utils/formatDate";
+import { paths } from "~~/utils/paths";
 
 definePageMeta({ layout: false });
 
