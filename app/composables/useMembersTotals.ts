@@ -1,49 +1,69 @@
 import type { Database } from '~~/types/database.types';
-import { tables } from '~~/utils/tables'
+
+// Define the expected return type for the RPC function based on SQL types
+type ReceiptItemAssignmentDetail = {
+  title: string;
+  cost: number;
+  user_name: string;
+  method: string;
+  value: number;
+  calculated_amount: number;
+};
+
+type UserItemAssignments = {
+  user_name: string;
+  assignments: ReceiptItemAssignmentDetail[];
+};
+
+type MembersTotalsResult = UserItemAssignments[];
 
 export function useMembersTotals(receiptId: string) {
   const client = useSupabaseClient<Database>();
-  const user = useSupabaseUser();
   const toast = useToast();
 
-  const { data: receiptItems, status: receiptItemsStatus, error: receiptItemsError } =  useAsyncData(
-    'receipt items totals',
-    async () => {
-      if (!user.value) {
-        throw new Error('No user authenticated');
+  const { data: membersTotals, error: membersTotalsError } = useAsyncData(
+    `members-totals-${receiptId}`,
+    async (): Promise<MembersTotalsResult | null> => {
+      try {
+        const { data, error } = await client.rpc('get_members_totals', {
+          receipt_id_input: receiptId
+        });
+
+        if (error) {
+          console.error('RPC error:', error);
+          throw error;
+        }
+
+        return data as MembersTotalsResult;
+      } catch (err) {
+        console.error('Composable error:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch members totals';
+        toast.add({
+          title: "Error fetching members totals",
+          description: errorMessage,
+          color: "error",
+          icon: "i-heroicons-x-circle",
+        });
+        throw err;
       }
-
-    const { data, error } = await client
-      .from(tables.receiptItems)
-      .select("id, title")
-      .eq("receipt_id", receiptId);
-
-    if (error) {
-      toast.add({
-        title: "Error fetching receipt item assignments",
-        description: error.message,
-        color: "error",
-        icon: "i-heroicons-x-circle",
-      });
+    },
+    {
+      server: false,
+      default: () => null,
     }
-
-    if (!data) {
-      return [];
-    }
-
-    const formattedData = data.reduce((acc, item) => {
-      acc[item.id] = item.title;
-      return acc;
-    }, {} as Record<string, string>);
-
-    return formattedData;
-  });
+  );
+  
+  // Computed properties for better UX
+  const hasError = computed(() => !!membersTotalsError.value);
+  const hasData = computed(() => !!membersTotals.value && membersTotals.value.length > 0);
 
   return {
-
-    // Receipt items totals
-    receiptItems,
-    receiptItemsStatus,
-    receiptItemsError,
+    // Members totals data
+    membersTotals,
+    membersTotalsError,
+    
+    // Computed properties
+    hasError,
+    hasData,
   };
 }

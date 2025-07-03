@@ -14,7 +14,7 @@
     <PageHeader title="Summary" />
     <UTable
       v-model:expanded="expanded"
-      :data="dataTest"
+      :data="tableData"
       :columns="columns"
       :ui="{ tr: 'data-[expanded=true]:bg-elevated/50' }"
       class="flex-1"
@@ -23,19 +23,19 @@
         <div class="bg-gray-50 dark:bg-gray-800 rounded-lg">
           <div class="space-y-2">
             <div
-              v-for="(item, index) in (row.getValue('items') as Item[])"
-              :key="index"
+              v-for="(assignment, assignmentIndex) in getRowItems(row)"
+              :key="assignmentIndex"
               class="flex justify-between items-center py-2 px-3 bg-white dark:bg-gray-700 rounded border"
             >
               <span class="font-medium text-gray-900 dark:text-gray-100">{{
-                item.name
+                assignment.title
               }}</span>
               <span class="text-gray-600 dark:text-gray-400">
                 {{
                   new Intl.NumberFormat("en-US", {
                     style: "currency",
                     currency: "GBP",
-                  }).format(item.price)
+                  }).format(assignment.calculated_amount)
                 }}
               </span>
             </div>
@@ -53,21 +53,42 @@ import type { TableColumn } from '@nuxt/ui'
 const { id } = useRoute().params;
 const expanded = ref({ null: true })
 
-const { receiptItems, receiptItemsStatus, receiptItemsError } = useMembersTotals(id as string);
+const { membersTotals, membersTotalsError } = useMembersTotals(id as string);
 
-type Item = {
-  name: string
-  price: number
-}
+// Convert members totals data to table format
+const tableData = computed(() => {
+  if (!membersTotals.value) return [];
 
-type Payment = {
-  name : string
-  items: Item[]
-  total: number
-  color: string
-}
+  return membersTotals.value.map((member, index) => {
+    // Handle case where assignments might be undefined
+    const assignments = member.assignments || [];
 
-const columns: TableColumn<Payment>[] = [
+    // Calculate total from assignments
+    const total = assignments.reduce((sum, assignment) => sum + assignment.calculated_amount, 0);
+
+    return {
+      name: member.user_name,
+      total: total,
+      items: assignments.map(assignment => ({
+        title: assignment.title,
+        calculated_amount: assignment.calculated_amount
+      }))
+    };
+  });
+});
+
+// Helper function to get items from a table row
+const getRowItems = (row: any) => {
+  return (row.getValue('items') as { title: string; calculated_amount: number }[]) || [];
+};
+
+type TableRow = {
+  name: string;
+  total: number;
+  items: { title: string; calculated_amount: number; }[];
+};
+
+const columns: TableColumn<TableRow>[] = [
   {
     id: 'avatar',
     cell: ({ row }) => h(UAvatar, {
@@ -84,7 +105,7 @@ const columns: TableColumn<Payment>[] = [
   {
     accessorKey: 'items',
     header: 'Items',
-    cell: ({ row }) => (row.getValue('items') as Item[]).length
+    cell: ({ row }) => (row.getValue('items') as { title: string; calculated_amount: number; }[]).length
   },
   {
     accessorKey: 'total',
@@ -119,71 +140,4 @@ const columns: TableColumn<Payment>[] = [
       })
   },
 ]
-
-
-const dataTest = ref<Payment[]>([
-  {
-    name: 'James Anderson',
-    total: 36.50,
-    color: 'bg-red-500',
-    items: [
-      {
-        name: 'Pizza',
-        price: 10.00
-      },
-      {
-        name: 'Pasta',
-        price: 10.00
-      }
-    ]
-  },
-  {
-    name: 'Mia White',
-    items: [
-      {
-        name: 'Pizza',
-        price: 10.00
-      },
-      {
-        name: 'Chilli',
-        price: 10.00
-      }
-    ],
-    total: 10.00,
-    color: 'bg-cyan-500'
-  },
-  {
-    name: 'William Brown',
-    items: [
-      {
-        name: 'Chopped Tomatoes',
-        price: 10.00
-      },
-    ],
-    total: 19.20,
-    color: 'bg-blue-500'
-  },
-  {
-    name: 'Emma Davis',
-    items: [
-      {
-        name: 'Item 1',
-        price: 10.00
-      }
-    ],
-    total: 10.00,
-    color: 'bg-emerald-500'
-  },
-  {
-    name: 'Ethan Harris',
-    items: [
-      {
-        name: 'Item 1',
-        price: 10.00
-      }
-    ],
-    total: 10.00,
-    color: 'bg-amber-500'
-  }
-])
 </script>
