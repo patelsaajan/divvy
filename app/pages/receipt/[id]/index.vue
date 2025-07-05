@@ -248,9 +248,11 @@ import { formatDate } from "~~/utils/formatDate";
 import { paths } from "~~/utils/paths";
 
 definePageMeta({ layout: false });
+import { ModalsConfirmation } from '#components'
 
-const route = useRoute();
-const toast = useToast();
+const route   = useRoute();
+const toast   = useToast();
+const overlay = useOverlay();
 const { isMobile } = useDevice();
 
 // Get the route parameter
@@ -425,7 +427,6 @@ const memberItems = computed(() => {
   if (members.value.length > 0) {
     items.push({ type: "separator" });
   }
-
   items.push(
     ...(members.value.map((member) => ({
       label: member.name,
@@ -519,10 +520,31 @@ const handleAddItem = () => {
   editItem.value = { ...item, assignments: [] };
 };
 
+const modalDeleteConfirmation = overlay.create(ModalsConfirmation, {
+  props: {
+    title: "Delete Item",
+    text: "Are you sure you want to delete this item? This action cannot be undone.",
+    confirmText: "Delete",
+    cancelText: "Cancel",
+    onConfirm: () => {
+      modalDeleteConfirmation.close();
+    },
+  },
+});
+
 const handleDeleteItem = (index: number) => {
   const itemToDelete = receiptItemsWithAssignments.value[index];
   if (!itemToDelete) return;
 
-  deleteReceiptItem(itemToDelete.id);
+  modalDeleteConfirmation.open({
+    title: "Delete Item",
+    text: `Are you sure you want to delete ${itemToDelete.title}? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
+    onConfirm: () => {
+      modalDeleteConfirmation.close();
+      deleteReceiptItem(itemToDelete.id);
+    },
+  });
 };
 </script>

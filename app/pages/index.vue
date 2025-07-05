@@ -13,10 +13,12 @@
         <div
           v-for="receipt in receipts"
           :key="receipt.id"
-          :class="`
+          :class="
+            `
             flex justify-between bg-gray-800 rounded-lg p-4 overflow-x-hidden
             ${isMobile ? 'flex-col' : 'flex-row items-center'}
-          `"
+          `
+          "
         >
           <!-- Receipt header -->
           <div class="flex items-center">
@@ -28,9 +30,9 @@
                 {{ receipt.vendor ?? "Unknown" }}
               </h3>
               <div
-                :class="`flex justify-between ${
-                  isMobile ? 'flex-row' : 'flex-col'
-                }`"
+                :class="
+                  `flex justify-between ${isMobile ? 'flex-row' : 'flex-col'}`
+                "
               >
                 <span class="text-xs text-gray-400">
                   {{ formatDate(receipt.uploaded_at) }}

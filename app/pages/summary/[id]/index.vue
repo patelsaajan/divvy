@@ -1,12 +1,11 @@
 <template>
-  <div class="container">
+  <div class="container mx-auto max-w-screen-md">
     <PageBackButton content="Back" :link="paths.home" />
-
     <PageHeader title="Summary" />
 
     <UTable
       v-model:expanded="expanded"
-      :data="data"
+      :data="tableData"
       :columns="columns"
       :ui="{ tr: 'data-[expanded=true]:bg-elevated/50' }"
       class="flex-1"
@@ -15,19 +14,19 @@
         <div class="bg-gray-50 dark:bg-gray-800 rounded-lg">
           <div class="space-y-2">
             <div
-              v-for="(item, index) in (row.getValue('items') as Item[])"
-              :key="index"
+              v-for="(assignment, assignmentIndex) in getRowItems(row)"
+              :key="assignmentIndex"
               class="flex justify-between items-center py-2 px-3 bg-white dark:bg-gray-700 rounded border"
             >
               <span class="font-medium text-gray-900 dark:text-gray-100">{{
-                item.name
+                assignment.title
               }}</span>
               <span class="text-gray-600 dark:text-gray-400">
                 {{
                   new Intl.NumberFormat("en-US", {
                     style: "currency",
                     currency: "GBP",
-                  }).format(item.price)
+                  }).format(assignment.calculated_amount)
                 }}
               </span>
             </div>
@@ -47,19 +46,42 @@ definePageMeta({ layout: false });
 
 const expanded = ref({ null: true });
 
-type Item = {
-  name: string;
-  price: number;
+const { membersTotals, membersTotalsError } = useMembersTotals(useRoute().params.id as string);
+
+// Convert members totals data to table format
+const tableData = computed(() => {
+  if (!membersTotals.value) return [];
+
+  return membersTotals.value.map((member, index) => {
+    // Handle case where assignments might be undefined
+    const assignments = member.assignments || [];
+
+    // Calculate total from assignments
+    const total = assignments.reduce((sum, assignment) => sum + assignment.calculated_amount, 0);
+
+    return {
+      name: member.user_name,
+      total: total,
+      items: assignments.map(assignment => ({
+        title: assignment.title,
+        calculated_amount: assignment.calculated_amount
+      }))
+    };
+  });
+});
+
+// Helper function to get items from a table row
+const getRowItems = (row: any) => {
+  return (row.getValue('items') as { title: string; calculated_amount: number }[]) || [];
 };
 
-type Payment = {
+type TableRow = {
   name: string;
-  items: Item[];
   total: number;
-  color: string;
+  items: { title: string; calculated_amount: number; }[];
 };
 
-const columns: TableColumn<Payment>[] = [
+const columns: TableColumn<TableRow>[] = [
   {
     id: "avatar",
     cell: ({ row }) =>
@@ -75,9 +97,9 @@ const columns: TableColumn<Payment>[] = [
     cell: ({ row }) => row.getValue("name"),
   },
   {
-    accessorKey: "items",
-    header: "Items",
-    cell: ({ row }) => (row.getValue("items") as Item[]).length,
+    accessorKey: 'items',
+    header: 'Items',
+    cell: ({ row }) => (row.getValue('items') as { title: string; calculated_amount: number; }[]).length
   },
   {
     accessorKey: "total",
@@ -111,71 +133,5 @@ const columns: TableColumn<Payment>[] = [
         onClick: () => row.toggleExpanded(),
       }),
   },
-];
-
-const data = ref<Payment[]>([
-  {
-    name: "James Anderson",
-    total: 36.5,
-    color: "bg-red-500",
-    items: [
-      {
-        name: "Pizza",
-        price: 10.0,
-      },
-      {
-        name: "Pasta",
-        price: 10.0,
-      },
-    ],
-  },
-  {
-    name: "Mia White",
-    items: [
-      {
-        name: "Pizza",
-        price: 10.0,
-      },
-      {
-        name: "Chilli",
-        price: 10.0,
-      },
-    ],
-    total: 10.0,
-    color: "bg-cyan-500",
-  },
-  {
-    name: "William Brown",
-    items: [
-      {
-        name: "Chopped Tomatoes",
-        price: 10.0,
-      },
-    ],
-    total: 19.2,
-    color: "bg-blue-500",
-  },
-  {
-    name: "Emma Davis",
-    items: [
-      {
-        name: "Item 1",
-        price: 10.0,
-      },
-    ],
-    total: 10.0,
-    color: "bg-emerald-500",
-  },
-  {
-    name: "Ethan Harris",
-    items: [
-      {
-        name: "Item 1",
-        price: 10.0,
-      },
-    ],
-    total: 10.0,
-    color: "bg-amber-500",
-  },
-]);
+]
 </script>
