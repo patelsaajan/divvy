@@ -522,9 +522,13 @@ const handleAddItem = () => {
 
 const modalDeleteConfirmation = overlay.create(ModalsConfirmation, {
   props: {
-    title      : "Delete Item",
+    title: "Delete Item",
+    text: "Are you sure you want to delete this item? This action cannot be undone.",
     confirmText: "Delete",
     cancelText: "Cancel",
+    onConfirm: () => {
+      modalDeleteConfirmation.close();
+    },
   },
 });
 
@@ -532,6 +536,15 @@ const handleDeleteItem = (index: number) => {
   const itemToDelete = receiptItemsWithAssignments.value[index];
   if (!itemToDelete) return;
 
-  deleteReceiptItem(itemToDelete.id);
+  modalDeleteConfirmation.open({
+    title: "Delete Item",
+    text: `Are you sure you want to delete ${itemToDelete.title}? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
+    onConfirm: () => {
+      modalDeleteConfirmation.close();
+      deleteReceiptItem(itemToDelete.id);
+    },
+  });
 };
 </script>
