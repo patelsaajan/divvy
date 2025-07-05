@@ -1,17 +1,8 @@
 <template>
   <div class="container mx-auto max-w-screen-md">
-    <div class="flex items-center mb-6">
-      <UButton
-        variant="link"
-        color="secondary"
-        class="p-2 mr-2 cursor-pointer"
-        @click="navigateTo(`/receipt/${id}`)"
-      >
-        <UIcon name="i-heroicons-chevron-left" :size="24" />
-        <span class="ml-2">Back</span>
-      </UButton>
-    </div>
+    <PageBackButton content="Back" :link="paths.home" />
     <PageHeader title="Summary" />
+
     <UTable
       v-model:expanded="expanded"
       :data="tableData"
@@ -47,13 +38,15 @@
 </template>
 
 <script setup lang="ts">
-import { UTable, UButton, UAvatar } from '#components'
-import type { TableColumn } from '@nuxt/ui'
+import { UAvatar, UButton, UTable } from "#components";
+import type { TableColumn } from "@nuxt/ui";
+import { paths } from "~~/utils/paths";
 
-const { id } = useRoute().params;
-const expanded = ref({ null: true })
+definePageMeta({ layout: false });
 
-const { membersTotals, membersTotalsError } = useMembersTotals(id as string);
+const expanded = ref({ null: true });
+
+const { membersTotals, membersTotalsError } = useMembersTotals(useRoute().params.id as string);
 
 // Convert members totals data to table format
 const tableData = computed(() => {
@@ -90,17 +83,18 @@ type TableRow = {
 
 const columns: TableColumn<TableRow>[] = [
   {
-    id: 'avatar',
-    cell: ({ row }) => h(UAvatar, {
-      size: 'md',
-      alt: row.getValue('name') as string,
-      class: 'bg-blue-500/30'
-    })
+    id: "avatar",
+    cell: ({ row }) =>
+      h(UAvatar, {
+        size: "md",
+        alt: row.getValue("name") as string,
+        class: "bg-blue-500/30",
+      }),
   },
   {
-    accessorKey: 'name',
-    header: 'Name',
-    cell: ({ row }) => row.getValue('name')
+    accessorKey: "name",
+    header: "Name",
+    cell: ({ row }) => row.getValue("name"),
   },
   {
     accessorKey: 'items',
@@ -108,36 +102,36 @@ const columns: TableColumn<TableRow>[] = [
     cell: ({ row }) => (row.getValue('items') as { title: string; calculated_amount: number; }[]).length
   },
   {
-    accessorKey: 'total',
-    header: () => h('div', { class: 'text-right' }, 'Total'),
+    accessorKey: "total",
+    header: () => h("div", { class: "text-right" }, "Total"),
     cell: ({ row }) => {
-      const amount = Number.parseFloat(row.getValue('total'))
+      const amount = Number.parseFloat(row.getValue("total"));
 
-      const formatted = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'GBP'
-      }).format(amount)
+      const formatted = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "GBP",
+      }).format(amount);
 
-      return h('div', { class: 'text-right font-medium' }, formatted)
-    }
+      return h("div", { class: "text-right font-medium" }, formatted);
+    },
   },
   {
-    id: 'expand',
+    id: "expand",
     cell: ({ row }) =>
       h(UButton, {
-        color: 'neutral',
-        variant: 'ghost',
-        icon: 'i-lucide-chevron-down',
+        color: "neutral",
+        variant: "ghost",
+        icon: "i-lucide-chevron-down",
         square: true,
-        'aria-label': 'Expand',
+        "aria-label": "Expand",
         ui: {
           leadingIcon: [
-            'transition-transform',
-            row.getIsExpanded() ? 'duration-200 rotate-180' : ''
-          ]
+            "transition-transform",
+            row.getIsExpanded() ? "duration-200 rotate-180" : "",
+          ],
         },
-        onClick: () => row.toggleExpanded()
-      })
+        onClick: () => row.toggleExpanded(),
+      }),
   },
 ]
 </script>

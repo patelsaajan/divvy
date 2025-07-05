@@ -1,17 +1,7 @@
 <template>
   <template v-if="receiptStatus === 'success'">
-    <div class="container mx-auto mt-6">
-      <div class="flex items-center mb-6">
-        <UButton
-          variant="link"
-          color="secondary"
-          class="p-2 mr-2 cursor-pointer"
-          @click="navigateTo('/')"
-        >
-          <UIcon name="i-heroicons-chevron-left" :size="24" />
-          <span class="ml-2">Receipts</span>
-        </UButton>
-      </div>
+    <div class="container mx-auto">
+      <PageBackButton content="Receipts" :link="paths.home" class="mb-6" />
 
       <div class="bg-gray-800 rounded-lg p-4 mb-4">
         <div class="flex items-center justify-between">
@@ -192,8 +182,9 @@
           <!-- Receipt Actions -->
           <div class="flex space-x-2 mt-4 px-2">
             <UButton
+              variant="soft"
               icon="i-lucide-users"
-              class="flex-1 bg-gray-700 text-white py-2 rounded text-sm flex items-center justify-center cursor-pointer"
+              class="flex-1 text-white py-2 rounded text-sm flex items-center justify-center cursor-pointer"
               @click="memberDrawerOpen = true"
             >
               Members
@@ -209,8 +200,9 @@
           </div>
           <div class="flex justify-between items-center px-2">
             <UButton
+              variant="soft"
               icon="i-lucide-chart-bar"
-              class="flex-1 py-2 bg-gray-700 text-white rounded text-sm flex items-center justify-center cursor-pointer"
+              class="flex-1 py-2 text-white rounded text-sm flex items-center justify-center cursor-pointer"
               :to="`/summary/${id}`"
             >
               Summary
@@ -253,17 +245,21 @@ import type {
 } from "~~/types/receipts";
 import { distributeAmountEvenly, formatCurrency } from "~~/utils/currency";
 import { formatDate } from "~~/utils/formatDate";
+import { paths } from "~~/utils/paths";
+
+definePageMeta({ layout: false });
 import { ModalsConfirmation } from '#components'
 
 const route   = useRoute();
 const toast   = useToast();
 const overlay = useOverlay();
+const { isMobile } = useDevice();
 
 // Get the route parameter
 const id = route.params.id as string;
 const memberDrawerOpen = ref(false);
 
-const { isMobile } = useDevice();
+const editItem = ref<ReceiptItemForm | null>(null);
 
 // Use the composables
 const { receipt, receiptLoading } = useReceipt(id);
@@ -516,7 +512,12 @@ const assignMembersToItemHandler = async (idx: number) => {
 };
 
 const handleAddItem = () => {
-  createReceiptItem("New Item", 0);
+  const item = createReceiptItem("New Item", 0);
+
+  if (!item) return;
+
+  // Open edit item drawer
+  editItem.value = { ...item, assignments: [] };
 };
 
 const modalDeleteConfirmation = overlay.create(ModalsConfirmation, {
@@ -531,20 +532,6 @@ const handleDeleteItem = (index: number) => {
   const itemToDelete = receiptItemsWithAssignments.value[index];
   if (!itemToDelete) return;
 
-  modalDeleteConfirmation.open({
-    text       :  `Are you sure you want to delete ${itemToDelete.title}? This action cannot be undone.`,
-    onConfirm  : () => {
-      modalDeleteConfirmation.close();
-      deleteReceiptItem(itemToDelete.id);
-      toast.add({
-        title: "Item Deleted",
-        description: `The item ${itemToDelete.title} has been deleted.`,
-        color: "error",
-        icon: "i-heroicons-trash",
-      });
-    }
-  });
+  deleteReceiptItem(itemToDelete.id);
 };
-
-const editItem = ref<ReceiptItemForm | null>(null);
 </script>

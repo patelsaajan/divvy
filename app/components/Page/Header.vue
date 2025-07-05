@@ -8,7 +8,6 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
-  title: string;
-}>();
+type PageProps = { title: string };
+const props = defineProps<PageProps>();
 </script>

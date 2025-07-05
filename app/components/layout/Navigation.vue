@@ -1,14 +1,14 @@
 <template>
   <nav
-    class="fixed mt-6 bottom-0 left-0 right-0 bg-gray-800/80 backdrop-blur-lg py-2 px-4 border-t border-gray-700/50 z-30"
+    class="fixed bg-gray-800/40 backdrop-blur-lg py-2 px-4 border border-gray-700/50 z-30 rounded-full mx-auto bottom-5 right-1/2 translate-x-1/2"
   >
-    <div class="flex justify-around items-center">
+    <div class="flex justify-around items-center gap-12">
       <NuxtLink
         :to="paths.home"
         class="flex flex-col items-center p-2 rounded-md text-gray-400 hover:text-white transition-colors"
         active-class="text-orange-500"
       >
-        <ReceiptIcon :size="24" />
+        <ReceiptIcon :size="20" />
         <span class="text-xs mt-1">Receipts</span>
       </NuxtLink>
 
@@ -17,7 +17,7 @@
         class="flex flex-col items-center p-2 rounded-md text-gray-400 hover:text-white transition-colors"
         active-class="text-orange-500"
       >
-        <UploadIcon :size="24" />
+        <UploadIcon :size="20" />
         <span class="text-xs mt-1">Upload</span>
       </NuxtLink>
 
@@ -26,7 +26,7 @@
         class="flex flex-col items-center p-2 rounded-md text-gray-400 hover:text-white transition-colors"
         active-class="text-orange-500"
       >
-        <SettingsIcon :size="24" />
+        <SettingsIcon :size="20" />
         <span class="text-xs mt-1">Settings</span>
       </NuxtLink>
     </div>
