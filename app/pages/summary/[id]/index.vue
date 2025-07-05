@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="container mx-auto max-w-screen-md">
     <div class="flex items-center mb-6">
       <UButton
         variant="link"
