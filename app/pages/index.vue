@@ -2,9 +2,9 @@
   <template v-if="!receiptsLoading">
     <PageHeader title="Your Receipts">
       <template #action>
-        <UButton :to="paths.upload" variant="ghost">
-          <UIcon name="i-lucide-plus" :size="20" />
-        </UButton>
+        <UDropdownMenu :items="menuItems" :content="{ align: 'start' }">
+          <UButton variant="ghost" icon="i-lucide-plus" />
+        </UDropdownMenu>
       </template>
     </PageHeader>
 
@@ -105,6 +105,8 @@
         </div>
       </div>
     </div>
+
+    <DrawerEditReceipt :open="drawerOpen" @close="drawerOpen = false" />
   </template>
 
   <template v-else>
@@ -112,14 +114,28 @@
   </template>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import type { DropdownMenuItem } from "@nuxt/ui";
 import { formatCurrency } from "~~/utils/currency";
 import { formatDate } from "~~/utils/formatDate";
 import { paths } from "~~/utils/paths";
 
 const { isMobile } = useDevice();
 
-console.log("isMobile", isMobile);
-
 const { receipts, receiptsLoading } = useReceipts();
+
+const drawerOpen = ref(false);
+
+const menuItems: DropdownMenuItem[] = [
+  {
+    label: "Create new receipt",
+    icon: "i-lucide-plus",
+    onClick: () => (drawerOpen.value = true),
+  },
+  {
+    label: "Upload existing receipt",
+    icon: "i-heroicons-camera",
+    onClick: () => navigateTo(paths.upload),
+  },
+];
 </script>
