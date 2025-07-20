@@ -25,8 +25,8 @@
                 {{
                   new Intl.NumberFormat("en-US", {
                     style: "currency",
-                    currency: currentCurrency,
-                  }).format(assignment.calculated_amount)
+                    currency: currentCurrency.label,
+                  }).format(assignment.calculated_amount * currentCurrency.rate)
                 }}
               </span>
             </div>
@@ -35,7 +35,7 @@
       </template>
     </UTable>
     <CurrencyConversion
-      :currency="currentCurrency"
+      :currency="currentCurrency.label"
       @update:currency="updateCurrency"
     />
   </div>
@@ -45,15 +45,20 @@
 import { UAvatar, UButton, UTable } from "#components";
 import type { TableColumn } from "@nuxt/ui";
 import { paths } from "~~/utils/paths";
+import { currencies } from "~~/dummyData/currencies";
 
 definePageMeta({ layout: false });
 
 const expanded = ref({ null: true });
 
-const currentCurrency = ref('gbp')
+const currentCurrency = reactive({
+  label: 'GBP',
+  rate: 1
+})
 
 const updateCurrency = (currency: string) => {
-  currentCurrency.value = currency
+  currentCurrency.label = currency
+  currentCurrency.rate = currencies.find(c => c.label === currency)?.rate || 1
 }
 
 const { membersTotals, membersTotalsError } = useMembersTotals(useRoute().params.id as string);
@@ -119,8 +124,8 @@ const columns: TableColumn<TableRow>[] = [
 
       const formatted = new Intl.NumberFormat("en-US", {
         style: "currency",
-        currency: currentCurrency.value,
-      }).format(amount);
+        currency: currentCurrency.label,
+      }).format(amount * currentCurrency.rate);
 
       return h("div", { class: "text-right font-medium" }, formatted);
     },

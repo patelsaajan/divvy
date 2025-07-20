@@ -22,6 +22,7 @@
 
 <script setup lang="ts">
 import type { DropdownMenuProps } from '@nuxt/ui'
+import { currencies } from '../../dummyData/currencies'
 
 interface CurrencyItem {
   label: string
@@ -51,42 +52,18 @@ const updateCurrency = (currency: string) => {
     }
 }
 
-const currencyItems: CurrencyItem[] = [
-  {
-    label: 'GBP',
-    icon: 'i-lucide-pound-sterling'
-  },
-  {
-    label: 'USD',
-    icon: 'i-lucide-dollar-sign'
-  },
-  {
-    label: 'EUR',
-    icon: 'i-lucide-euro'
-  }
-]
+const currencyItems: CurrencyItem[] = currencies.map((currency: { label: string; icon: string }) => ({
+  label: currency.label,
+  icon: currency.icon
+}))
 
-const items = computed<DropdownMenuProps['items']>(() => [
-  {
-    label: 'GBP',
-    icon: 'i-lucide-pound-sterling',
-    onSelect: () => updateCurrency('GBP'),
-    class: 'cursor-pointer hover:bg-gray-700',
-    color: currentCurrency.label === 'GBP' ? 'info' : 'neutral'
-  },
-  {
-    label: 'USD',
-    icon: 'i-lucide-dollar-sign',
-    onSelect: () => updateCurrency('USD'),
-    class: 'cursor-pointer hover:bg-gray-700',
-    color: currentCurrency.label === 'USD' ? 'info' : 'neutral'
-  },
-  {
-    label: 'EUR',
-    icon: 'i-lucide-euro',
-    onSelect: () => updateCurrency('EUR'),
-    class: 'cursor-pointer hover:bg-gray-700',
-    color: currentCurrency.label === 'EUR' ? 'info' : 'neutral'
-  }
-])
+const items = computed<DropdownMenuProps['items']>(() =>
+  currencyItems.map(currency => ({
+    label: currency.label,
+    icon: currency.icon,
+    onSelect: () => updateCurrency(currency.label),
+    class: 'cursor-pointer',
+    color: currentCurrency.label === currency.label ? 'info' : 'neutral'
+  }))
+)
 </script>
