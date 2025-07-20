@@ -34,6 +34,7 @@
         </div>
       </template>
     </UTable>
+    <CurrencyConversion />
   </div>
 </template>
 
