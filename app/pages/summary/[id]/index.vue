@@ -25,7 +25,7 @@
                 {{
                   new Intl.NumberFormat("en-US", {
                     style: "currency",
-                    currency: "GBP",
+                    currency: currentCurrency,
                   }).format(assignment.calculated_amount)
                 }}
               </span>
@@ -34,7 +34,10 @@
         </div>
       </template>
     </UTable>
-    <CurrencyConversion />
+    <CurrencyConversion
+      :currency="currentCurrency"
+      @update:currency="updateCurrency"
+    />
   </div>
 </template>
 
@@ -46,6 +49,12 @@ import { paths } from "~~/utils/paths";
 definePageMeta({ layout: false });
 
 const expanded = ref({ null: true });
+
+const currentCurrency = ref('gbp')
+
+const updateCurrency = (currency: string) => {
+  currentCurrency.value = currency
+}
 
 const { membersTotals, membersTotalsError } = useMembersTotals(useRoute().params.id as string);
 
@@ -110,7 +119,7 @@ const columns: TableColumn<TableRow>[] = [
 
       const formatted = new Intl.NumberFormat("en-US", {
         style: "currency",
-        currency: "GBP",
+        currency: currentCurrency.value,
       }).format(amount);
 
       return h("div", { class: "text-right font-medium" }, formatted);

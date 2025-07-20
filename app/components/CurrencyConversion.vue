@@ -26,39 +26,43 @@ import type { DropdownMenuProps } from '@nuxt/ui'
 interface CurrencyItem {
   label: string
   icon: string
-  value: string
 }
 
+const props = defineProps<{
+  currency: string
+}>()
+
 const currentCurrency = reactive({
-    value: 'gbp',
+    value: props.currency,
     icon: 'i-lucide-pound-sterling',
     label: 'GBP'
 })
 
+const emit = defineEmits<{
+  (e: 'update:currency', currency: string): void
+}>()
+
 const updateCurrency = (currency: string) => {
-    const selectedItem = currencyItems.find(item => item.value === currency)
+    const selectedItem = currencyItems.find(item => item.label === currency)
     if (selectedItem) {
-        currentCurrency.value = selectedItem.value
         currentCurrency.icon  = selectedItem.icon
         currentCurrency.label = selectedItem.label
+        emit('update:currency', selectedItem.label)
     }
 }
 
 const currencyItems: CurrencyItem[] = [
   {
     label: 'GBP',
-    icon: 'i-lucide-pound-sterling',
-    value: 'gbp'
+    icon: 'i-lucide-pound-sterling'
   },
   {
     label: 'USD',
-    icon: 'i-lucide-dollar-sign',
-    value: 'usd'
+    icon: 'i-lucide-dollar-sign'
   },
   {
     label: 'EUR',
-    icon: 'i-lucide-euro',
-    value: 'eur'
+    icon: 'i-lucide-euro'
   }
 ]
 
@@ -66,26 +70,23 @@ const items = computed<DropdownMenuProps['items']>(() => [
   {
     label: 'GBP',
     icon: 'i-lucide-pound-sterling',
-    value: 'gbp',
-    onSelect: () => updateCurrency('gbp'),
+    onSelect: () => updateCurrency('GBP'),
     class: 'cursor-pointer hover:bg-gray-700',
-    color: currentCurrency.value === 'gbp' ? 'info' : 'neutral'
+    color: currentCurrency.label === 'GBP' ? 'info' : 'neutral'
   },
   {
     label: 'USD',
     icon: 'i-lucide-dollar-sign',
-    value: 'usd',
-    onSelect: () => updateCurrency('usd'),
+    onSelect: () => updateCurrency('USD'),
     class: 'cursor-pointer hover:bg-gray-700',
-    color: currentCurrency.value === 'usd' ? 'info' : 'neutral'
+    color: currentCurrency.label === 'USD' ? 'info' : 'neutral'
   },
   {
     label: 'EUR',
     icon: 'i-lucide-euro',
-    value: 'eur',
-    onSelect: () => updateCurrency('eur'),
+    onSelect: () => updateCurrency('EUR'),
     class: 'cursor-pointer hover:bg-gray-700',
-    color: currentCurrency.value === 'eur' ? 'info' : 'neutral'
+    color: currentCurrency.label === 'EUR' ? 'info' : 'neutral'
   }
 ])
 </script>
