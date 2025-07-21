@@ -25,8 +25,11 @@
                 {{
                   new Intl.NumberFormat("en-US", {
                     style: "currency",
-                    currency: "GBP",
-                  }).format(assignment.calculated_amount)
+                    currency:
+                      currentCurrency.label === "MAN"
+                        ? "GBP"
+                        : currentCurrency.label,
+                  }).format(assignment.calculated_amount * currentCurrency.rate)
                 }}
               </span>
             </div>
@@ -34,6 +37,10 @@
         </div>
       </template>
     </UTable>
+    <CurrencyConversion
+      :currency="currentCurrency.label"
+      @update:currency="updateCurrency($event.currency, $event.rate)"
+    />
   </div>
 </template>
 
@@ -45,6 +52,16 @@ import { paths } from "~~/utils/paths";
 definePageMeta({ layout: false });
 
 const expanded = ref({ null: true });
+
+const currentCurrency = reactive({
+  label: 'GBP',
+  rate: 1
+})
+
+const updateCurrency = (currency: string, rate: number) => {
+  currentCurrency.label = currency
+  currentCurrency.rate = rate
+}
 
 const { membersTotals, membersTotalsError } = useMembersTotals(useRoute().params.id as string);
 
@@ -109,8 +126,9 @@ const columns: TableColumn<TableRow>[] = [
 
       const formatted = new Intl.NumberFormat("en-US", {
         style: "currency",
-        currency: "GBP",
-      }).format(amount);
+        currency:
+          currentCurrency.label === "MAN" ? "GBP" : currentCurrency.label,
+      }).format(amount * currentCurrency.rate);
 
       return h("div", { class: "text-right font-medium" }, formatted);
     },
