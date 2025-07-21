@@ -14,4 +14,9 @@ export const currencies = [
     icon: "i-lucide-euro",
     rate: 0.867,
   },
+  {
+    label: "MAN",
+    icon: "i-lucide-pencil",
+    rate: 1,
+  },
 ];
